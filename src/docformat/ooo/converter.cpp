@@ -60,17 +60,20 @@ QTextDocument *Converter::convert(const QString &fileName , QString &html) {
   }
   images = oooDocument.images(); /// for html image base64 + check if exist name...
   //// insert name key "insertnullimage"
-  QByteArray pixelaa("R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==");
+  QByteArray pixelaa("R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="); //// transparent pixel 1x1 not found image
   images.insert(QString("insertnullimage"),QByteArray::fromBase64(pixelaa));
   mTextDocument = new QTextDocument;
   mCursor = new QTextCursor(mTextDocument);
-
+  /**
   QFile f( QString("oo_test.xml") );
+     if (f.exists()) {
+      f.remove();
+     }
          f.open(  QIODevice::WriteOnly );
               f.write(oooDocument.content());
               f.close();
 
-  /**
+
    * Create the dom of the content
    */
   QXmlSimpleReader reader;
@@ -108,7 +111,11 @@ QTextDocument *Converter::convert(const QString &fileName , QString &html) {
   QMapIterator<QString, QByteArray> it(images);
   while (it.hasNext()) {
     it.next();
-    mTextDocument->addResource(QTextDocument::ImageResource, QUrl(it.key()),QImage::fromData(it.value()));
+    const QString namex = it.key();
+    QImage xpic;
+           xpic.loadFromData(it.value()); /// return bool <
+    ODTDEBUG() << "XXXXXX" <<  xpic.isNull() << "XXXXXXXXX  imagename.:" << namex;
+    mTextDocument->addResource(QTextDocument::ImageResource, QUrl(namex),xpic);
   }
 
   /**
@@ -154,19 +161,28 @@ QTextDocument *Converter::convert(const QString &fileName , QString &html) {
     element = element.nextSiblingElement();
   }
 
+  QStringList metax;
   MetaInformation::List metaInformation = mStyleInformation->metaInformation();
-  for (int i = 0; i < metaInformation.count(); ++i) {
-    //// emit addMetaData(metaInformation[i].key(), metaInformation[i].value(), metaInformation[i].title());
+  for (int i = 0; i < metaInformation.count(); ++i) { 
+         metax << metaInformation[i].key();
+         metax << metaInformation[i].value();
+         metax << metaInformation[i].title();
   }
+  if (metax.size() > 0) {
+      QString titels = metax.join(" , ");
+      emit setMetaMessage(titels);
+  }
+
+
+
 
   QString HTMLFORCE = mTextDocument->toHtml("utf_8");
   html = handle_html(HTMLFORCE); /*  inline image here.. if need.. */
-  ///// const QMap<QString, QByteArray> images = oooDocument.images();
 
 
 
 
-
+  emit setMetaMessage(QString("Ready Rendering... Document."));
   delete mCursor;
   delete mStyleInformation;
   mStyleInformation = 0;
@@ -191,7 +207,6 @@ bool Converter::convertText(const QDomElement &element) {
     ODTDEBUG() << "XXXXXXXXXXXXXXX  init:" << __FUNCTION__;
   QDomElement child = element.firstChildElement();
   while (!child.isNull()) {
-      ODTDEBUG() << "XXXXXXXXXXXXXXX  tag:" << child.tagName();
     if (child.tagName() == QLatin1String("p")) {
       mCursor->insertBlock();
       if (!convertParagraph(mCursor, child))
@@ -615,13 +630,16 @@ bool Converter::exist_image( const QString & name ) {
     return existpic;
 }
 
+
 QString Converter::handle_html( QString & html ) {
     const QMap<QString, QByteArray> pics = images;
     QMapIterator<QString, QByteArray> it(pics);
     while (it.hasNext()) {
                  it.next();
-                 ODTDEBUG() << "html replace-> in pic  " << it.key();
-                 QByteArray picsbase64 = image_encode(QImage::fromData(it.value()));
+                 QImage xpic;
+                        xpic.loadFromData(it.value());
+                 ODTDEBUG() << "html replace-> in " << xpic.isNull() <<  " pic  " << it.key();
+                 QByteArray picsbase64 = image_encode(xpic);
                  html.replace(it.key(),picsbase64);
     }
     return html;

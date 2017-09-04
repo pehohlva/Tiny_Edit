@@ -37,6 +37,8 @@
 #include <QtDebug>
 #include <QtGui/QTextCharFormat>
 #include <QtGui>
+#include <QSystemTrayIcon>
+
 
 #ifdef _PRINTERIOK_
 #include <QPrinterInfo>
@@ -96,7 +98,15 @@ public slots:
   void alignmentChanged(Qt::Alignment a);
   void DocumentChanged();
 
+  ////
+  void setTextTray( const QString txt );
+  void setTextMsg( const QString txt );
+
+
+
+
 protected:
+  QSystemTrayIcon *traytop;
   void drawall();
   void setupTextActions();
 

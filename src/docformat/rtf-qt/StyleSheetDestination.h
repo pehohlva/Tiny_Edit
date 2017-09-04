@@ -30,7 +30,7 @@ namespace RtfReader
 {
     class Reader;
 
-    class DOC_OASI_EXPORT StyleSheetDestination: public Destination
+    class  StyleSheetDestination: public Destination
     {
       public:
 	StyleSheetDestination( Reader *reader, AbstractRtfOutput *output, const QString &name );

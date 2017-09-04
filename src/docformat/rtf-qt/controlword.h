@@ -33,7 +33,7 @@ namespace RtfReader
   /**
      Representation of an RTF Control Word
   */
-  class DOC_OASI_EXPORT ControlWord
+  class  ControlWord
   {
   public:
     /**

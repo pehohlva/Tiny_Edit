@@ -29,7 +29,7 @@ namespace RtfReader
     /**
       RTF token
       */
-    class DOC_OASI_EXPORT Token {
+    class  Token {
       public: /* TODO: convert to getters / setters */
 	void dump() const;
 	TokenType type;

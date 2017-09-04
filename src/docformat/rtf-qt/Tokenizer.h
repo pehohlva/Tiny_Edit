@@ -29,7 +29,7 @@ namespace RtfReader
     /**
       RTF tokenizer
       */
-    class DOC_OASI_EXPORT Tokenizer {
+    class  Tokenizer {
       public:
 	explicit Tokenizer( QFile *inputDevice ) : m_inputDevice( inputDevice )
 	{}

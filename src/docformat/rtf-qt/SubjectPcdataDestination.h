@@ -28,7 +28,7 @@ namespace RtfReader
 {
     class Reader;
 
-    class DOC_OASI_EXPORT SubjectPcdataDestination: public PcdataDestination
+    class  SubjectPcdataDestination: public PcdataDestination
     {
       public:
 	SubjectPcdataDestination( Reader *reader, AbstractRtfOutput *output, const QString &name );

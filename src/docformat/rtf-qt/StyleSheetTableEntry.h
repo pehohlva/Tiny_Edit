@@ -29,7 +29,7 @@ namespace RtfReader
 	Justified,
 	Distributed };
 	
-    class DOC_OASI_EXPORT StyleSheetTableEntry
+    class  StyleSheetTableEntry
     {
       public:
 	StyleSheetTableEntry() : m_textAlignment( LeftAligned ),

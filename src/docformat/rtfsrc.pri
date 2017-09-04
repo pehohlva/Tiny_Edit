@@ -1,4 +1,8 @@
 
+
+INCLUDEPATH += $$PWD/rtf-qt  $$PWD
+
+
 # Input
 HEADERS += $$PWD/rtf-qt/TextDocumentRtfOutput.h \
            $$PWD/rtf-qt/AbstractRtfOutput.h \

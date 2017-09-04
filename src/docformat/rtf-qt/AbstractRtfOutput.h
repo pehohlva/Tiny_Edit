@@ -28,7 +28,6 @@
 #include "StyleSheetTableEntry.h"
 
 
-#include "doc_oasi_export.h"
 /**
    Namespace for the public interface for the RtfReader classes
 */
@@ -37,7 +36,7 @@ namespace RtfReader
     /**
 	Abstract output strategy for RTF Parser
     */
-    class DOC_OASI_EXPORT AbstractRtfOutput
+    class  AbstractRtfOutput
     {
       public:
 	AbstractRtfOutput();

@@ -79,6 +79,7 @@ void EditorKernel::Image_mod_Setting() {
     return;
   }
   QDateTime timer1(QDateTime::currentDateTime());
+  ///// const qint64 sec1970 = timer1.currentMSecsSinceEpoch();
   QVariant img = this->document()->resource(QTextDocument::ImageResource,
                                             picname); //// get image
   QImage imgxx = img.value<QImage>();
@@ -103,9 +104,14 @@ void EditorKernel::Image_mod_Setting() {
         format.setWidth(imgswap.width());
         format.setHeight(imgswap.height());
         format.setName(randomname);
+        QTextDocumentFragment  fragment= QTextDocumentFragment::fromHtml(QString("<p></br></p>"));
+        this->textCursor().insertFragment(fragment);
         this->textCursor().insertImage(format);
         this->document()->addResource(QTextDocument::ImageResource,
                                       QUrl(randomname), imgswap);
+
+
+
       } else {
         qDebug() << "###  image is null ";
       }

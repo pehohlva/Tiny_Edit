@@ -29,7 +29,9 @@
 #include "Destination.h"
 #include "Tokenizer.h"
 #include "RtfGroupState.h"
-#include "doc_oasi_export.h"
+#include "TextDocumentRtfOutput.h"
+
+
 /**
    Namespace for the public interface for the RtfReader classes
 */
@@ -47,7 +49,7 @@ namespace RtfReader
 
      TODO: add spec reference
   */
-  class DOC_OASI_EXPORT  Reader : public QObject
+  class   Reader : public QObject
   {
     Q_OBJECT
   public:

@@ -29,7 +29,7 @@ namespace RtfReader
 {
     class Reader;
 
-    class DOC_OASI_EXPORT InfoCreatedTimeDestination: public InfoTimeDestination
+    class  InfoCreatedTimeDestination: public InfoTimeDestination
     {
       public:
 	InfoCreatedTimeDestination( Reader *reader, AbstractRtfOutput *output, const QString &name );

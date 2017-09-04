@@ -28,13 +28,13 @@ class QTextImageFormat;
 
 #include <QStack>
 #include <QTextCharFormat>
-#include "doc_oasi_export.h"
+
 
 namespace RtfReader
 {
     class Reader;
 
-    class DOC_OASI_EXPORT TextDocumentRtfOutput: public AbstractRtfOutput
+    class  TextDocumentRtfOutput: public AbstractRtfOutput
     {
       public:
 	explicit TextDocumentRtfOutput( QTextDocument *document );

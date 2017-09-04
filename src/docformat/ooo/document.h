@@ -48,7 +48,7 @@
 
 #include "manifest.h"
 
-#if 1 //// 1 or 0
+#if 0 //// 1 or 0
 #define ODTDEBUG qDebug
 #define STAGE 1
 #else

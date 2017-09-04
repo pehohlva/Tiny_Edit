@@ -22,7 +22,7 @@
 
 namespace RtfReader
 {
-    class DOC_OASI_EXPORT RtfGroupState
+    class  RtfGroupState
     {
     public:
 	RtfGroupState() : didChangeDestination( false ), endOfFile( false )

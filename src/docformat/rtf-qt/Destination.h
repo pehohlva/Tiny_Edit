@@ -23,7 +23,7 @@
 #include <QTextCharFormat>
 
 #include "AbstractRtfOutput.h"
-#include "doc_oasi_export.h"
+
 
 
 namespace RtfReader
@@ -33,7 +33,7 @@ namespace RtfReader
     /**
        A representation of a destination
     */
-    class DOC_OASI_EXPORT Destination {
+    class  Destination {
     public:
         // TODO: remove reader
 	Destination( Reader *reader, AbstractRtfOutput *output, const QString &name );

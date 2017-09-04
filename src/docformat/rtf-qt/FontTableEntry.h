@@ -17,7 +17,9 @@
 
 #ifndef RTFREADER_FONTTABLEENTRY_H
 #define RTFREADER_FONTTABLEENTRY_H
-#include "doc_oasi_export.h"
+
+
+
 
 
 namespace RtfReader
@@ -26,7 +28,7 @@ namespace RtfReader
 
     enum FontPitch { Default = 0, Fixed = 1, Variable = 2 };
 
-    class DOC_OASI_EXPORT FontTableEntry
+    class  FontTableEntry
     {
       public:	
 	FontTableEntry() : m_fontFamily( Nil ), m_fontPitch( Default )

@@ -7,8 +7,29 @@ message( "../config.pri not found" )
 
 qtHaveModule(core) {
 !include(docformat/odt.pri ) {
+DEFINES += _ODTREADON_
 message( "docformat/odt.pri not found" )
 }
+DEFINES += _ODTREADON_X
+message( "  odt  load " )
+}
+
+qtHaveModule(core) {
+!include(docformat/rtfsrc.pri ) {
+DEFINES += _RTFREADON_
+message( "docformat/rtfsrc.pri not found" )
+}
+DEFINES += _RTFREADON_X
+message( "  rtf load " )
+}
+
+
+qtHaveModule(svg) {
+QT += svg
+message( "load svg module... for images" )
+} else {
+DEFINES += _NOSVGMODULE_
+message( "svg module disable ... for images svg" )
 }
 
 
@@ -31,14 +52,14 @@ qtHaveModule(core) {
 TEMPLATE = app
 TARGET = OasisEdit
 CONFIG +=release warn_off silence
-RC_FILE = ODTicon.icns
+RC_FILE = images/ODTicon.icns
 QMAKE_INFO_PLIST = Info.plist
 } else {
 ############################debug!##########################################
 TEMPLATE = app
 TARGET = sax
 CONFIG-=app_bundle
-CONFIG +=debug warn_on console
+CONFIG +=debug_release warn_on console
 }
 
 
@@ -54,13 +75,15 @@ HEADERS += imageedit.h \
     oasimain.h \
     editorkernel.h \
     editortable_setting.h \
-    ui_forms.h
+    ui_forms.h \
+    doc_session.h
 
 SOURCES += main.cpp \
     imageedit.cpp \
     oasimain.cpp \
     editorkernel.cpp \
-    editortable_setting.cpp
+    editortable_setting.cpp \
+    doc_session.cpp
 
 
 ###HEADERS += textedit.h core_application.cpp os_application.h core_application.h

@@ -41,7 +41,7 @@
 #include <QTextCharFormat>
 #include <QTextTableFormat>
 #include <QDomElement>
-#include <QTextBlockFormat>r
+#include <QTextBlockFormat>
 
 class QDomElement;
 class QDomText;
@@ -49,8 +49,10 @@ class QDomText;
 namespace OOO {
 
 class Document;
+class Converter : public QObject {
 
-class Converter {
+   Q_OBJECT
+
 public:
   Converter();
   ~Converter();
@@ -58,7 +60,8 @@ public:
   QByteArray image_encode( QImage im );
   QString handle_html( QString & html );
   bool exist_image( const QString & name );
-
+signals:
+    void setMetaMessage(QString);
    ///// key,value,title.
    //// void addMetaData(QString,QString,QString);
 

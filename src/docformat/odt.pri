@@ -20,7 +20,8 @@ HEADERS += docformat/kzip.h \
            docformat/ooo/formatproperty.h \
            docformat/ooo/manifest.h \
            docformat/ooo/styleinformation.h \
-           docformat/ooo/styleparser.h 
+           docformat/ooo/styleparser.h \ 
+    $$PWD/rtf-qt/doc_oasi_export.h
 SOURCES += docformat/kzip.cpp \
            docformat/QmyDom.cpp \
 		   docformat/core_htmldriver.h \

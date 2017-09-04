@@ -29,7 +29,7 @@ namespace RtfReader
 {
     class Reader;
 
-    class DOC_OASI_EXPORT PictDestination: public Destination
+    class  PictDestination: public Destination
     {
       public:
 	PictDestination( Reader *reader, AbstractRtfOutput *output, const QString &name );

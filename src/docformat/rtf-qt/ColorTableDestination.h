@@ -29,7 +29,7 @@ namespace RtfReader
 {
     class Reader;
 
-    class DOC_OASI_EXPORT ColorTableDestination: public Destination
+    class  ColorTableDestination: public Destination
     {
       public:
 	ColorTableDestination( Reader *reader, AbstractRtfOutput *output, const QString &name );
