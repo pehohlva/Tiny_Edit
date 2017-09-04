@@ -1,16 +1,13 @@
 #include "oasimain.h"
 
-#include <QToolBar>
-#include <QMenu>
-#include <QMainWindow>
-#include <QMenuBar>
 #include <QComboBox>
 #include <QLabel>
-#include <QSettings>
+#include <QMainWindow>
+#include <QMenu>
+#include <QMenuBar>
 #include <QObject>
-
-
-
+#include <QSettings>
+#include <QToolBar>
 
 #ifndef _ODTREADON_
 #include <OdtFormat>
@@ -20,15 +17,12 @@
 #include <RTFFormat>
 #endif
 
-#include "editorkernel.h"
 #include "doc_session.h"
+#include "editorkernel.h"
 
-#define _CVERSION_ \
-             QString("Vr. 1.2")
 
-#define __TMPCACHE__ \
-             QString("%1/.fastcache/").arg(QDir::homePath())
 
+#define __TMPCACHE__ QString("%1/.fastcache/").arg(QDir::homePath())
 
 //// default :/images/ODTicon.png
 #ifdef Q_WS_MAC
@@ -39,40 +33,27 @@ static const QString rsrcPath = ":/images/win";
 
 static const QString _not_save_doc_ = QString("document.odt");
 
-QSettings setter(QString("OasiClub"),QString("OasiEditor"));
+QSettings setter(QString("OasiClub"), QString("OasiEditor"));
 
 static const int toolbarhight = 25;
-static const QString xtyle = QString("");  ///// background-color: #c0d6d5;
-
+static const QString xtyle = QString(""); ///// background-color: #c0d6d5;
 
 bool OasiMain::load(const QString &f) {
-    qDebug() << "load in:" << f;
-    if (!enableedit) {
-         //// return false;
-    }
-    QMimeDatabase mimeDatabase;
-    QMimeType mimeType;
-    mimeType = mimeDatabase.mimeTypeForFile(f);
-    QStringList alii = mimeType.aliases();
-
-    const QString html = DOC::self(this)->GetHtml(f); //// no images
-    QTextDocument *xdoc = DOC::self(this)->GetQdoc(f); //// images clone here
-    bool havedata = xdoc->isEmpty();
-    if (html.isEmpty() && !havedata) {
-        base_edit->setDocument(xdoc);
-        setCurrentFileName(f);
-        return true;
-    } else {
-        base_edit->setHtml(html);
-        setCurrentFileName(f);
-        return true;
-    }
-
+  const QString html = DOC::self(this)->GetHtml(f);  //// no images
+  QTextDocument *xdoc = DOC::self(this)->GetQdoc(f); //// images clone here
+  bool filldocobj = (xdoc->isEmpty())? false: true;
+  if (html.isEmpty()) {
+    base_edit->setDocument(xdoc);
+    setCurrentFileName(f);
+    return true;
+  } else {
+    base_edit->setHtml(html);
+    setCurrentFileName(f);
+    return true;
+  }
 }
 
-
-OasiMain::OasiMain(QWidget *parent) : QMainWindow(parent)
-{
+OasiMain::OasiMain(QWidget *parent) : QMainWindow(parent) {
   this->setContentsMargins(5, 0, 5, 0);
   enableedit = false;
   setWindowIcon(QIcon(":/images/ODTicon.png"));
@@ -87,19 +68,19 @@ OasiMain::OasiMain(QWidget *parent) : QMainWindow(parent)
 
   //// document session setPriorMessage
   connect(DOC::self(this), SIGNAL(setMessage(QString)), this, SLOT(setTextMsg(QString)));
-  connect(DOC::self(this), SIGNAL(setPriorMessage(QString)), this, SLOT(setTextTray(QString)));
+  connect(DOC::self(this), SIGNAL(setMessageBase(QString)), this, SLOT(setTextStatus2(QString)));
+  connect(DOC::self(this), SIGNAL(setPriorMessage(QString)), this, SLOT(TextOnlyTray(QString)));
+
+
+
   fontChanged(base_edit->font());
   colorChanged(base_edit->textColor());
   alignmentChanged(base_edit->alignment());
-
-
-
 
   connect(base_edit->document(), SIGNAL(modificationChanged(bool)), actionSave,
           SLOT(setEnabled(bool)));
   connect(base_edit->document(), SIGNAL(modificationChanged(bool)), this,
           SLOT(DocumentChanged()));
-
 
   connect(base_edit->document(), SIGNAL(modificationChanged(bool)), this,
           SLOT(setWindowModified(bool)));
@@ -124,35 +105,42 @@ OasiMain::OasiMain(QWidget *parent) : QMainWindow(parent)
   connect(actionUndo, SIGNAL(triggered()), base_edit, SLOT(undo()));
   connect(actionRedo, SIGNAL(triggered()), base_edit, SLOT(redo()));
 
-  connect(base_edit, SIGNAL(copyAvailable(bool)), actionCut, SLOT(setEnabled(bool)));
-  connect(base_edit, SIGNAL(copyAvailable(bool)), actionCopy, SLOT(setEnabled(bool)));
+  connect(base_edit, SIGNAL(copyAvailable(bool)), actionCut,
+          SLOT(setEnabled(bool)));
+  connect(base_edit, SIGNAL(copyAvailable(bool)), actionCopy,
+          SLOT(setEnabled(bool)));
 
-  //// connect(QApplication::clipboard(), SIGNAL(dataChanged()), this, SLOT(clipboardDataChanged()));
+  //// connect(QApplication::clipboard(), SIGNAL(dataChanged()), this,
+  /// SLOT(clipboardDataChanged()));
   show();
   base_edit->document()->setUndoRedoEnabled(true);
-  traytop->showMessage(QString("Banana.... "),QString("Le banane sono li ...."),QSystemTrayIcon::Warning,15000);
-  setTextTray(QString());
+  traytop->showMessage(_BASICTITLE_EDITOR_,
+                       QString("End Loading Setting... Open File by CTRL+O "),
+                       QSystemTrayIcon::Warning, 15000);
 }
 
 
+OasiMain::~OasiMain(void) {
+   qDebug() << "Object is being deleted";
+   DOC::self(this)->save();
+}
+
 void OasiMain::drawall() {
 
-    QMenuBar *xtop = menuBar();
-    QToolBar *tb = new QToolBar();
-    tb->setMaximumHeight(toolbarhight);
-    tb->setWindowTitle(tr("File Actions"));
-    this->addToolBar(tb);
-    QPixmap perimage(":/images/ODTicon.png");
-   traytop = new QSystemTrayIcon(QIcon(perimage),this);
-   traytop->setToolTip(tr("System tray sample "));
-   traytop->setIcon(QIcon(perimage));
-   traytop->setObjectName(tr("SystemTrayHandler"));
+  QMenuBar *xtop = menuBar();
+  QToolBar *tb = new QToolBar();
+  tb->setMaximumHeight(toolbarhight);
+  tb->setWindowTitle(tr("File Actions"));
+  this->addToolBar(tb);
+  QPixmap perimage(":/images/ODTicon.png");
+  traytop = new QSystemTrayIcon(QIcon(perimage), this);
+  traytop->setToolTip(tr("System tray sample "));
+  traytop->setIcon(QIcon(perimage));
+  traytop->setObjectName(tr("SystemTrayHandler"));
   QAction *maximizeAction = new QAction("Maximize Window", this);
-  connect(maximizeAction,&QAction::triggered, this, &OasiMain::showMaximized );
+  connect(maximizeAction, &QAction::triggered, this, &OasiMain::showMaximized);
 
-
-
-      traytop->setVisible(true);
+  traytop->setVisible(true);
 
   QMenu *menu = new QMenu(tr("&File"), this);
   menuBar()->addMenu(menu);
@@ -214,9 +202,8 @@ void OasiMain::drawall() {
   traytop->setContextMenu(menu);
 
 #if defined Q_OS_MACOS
-     menu->setAsDockMenu();  //// only mac osx
+  menu->setAsDockMenu(); //// only mac osx
 #endif
-
 
   QWidget *panel = new QWidget(this);
   panel->setContentsMargins(0, 0, 0, 0);
@@ -228,10 +215,10 @@ void OasiMain::drawall() {
   setCentralWidget(panel);
   statusbar = new QStatusBar(this);
   statusbar->setMaximumHeight(toolbarhight);
-    statustxt = new QLabel("Application Loading...");
-    statustxt->setFixedWidth(255);
-    statustxt2 = new QLabel("");
-    statustxt2->setFixedWidth(255);
+  statustxt = new QLabel("");
+  statustxt->setFixedWidth(350);
+  statustxt2 = new QLabel("");
+  //// statustxt2->setFixedWidth(350); /// elastic
   statusbar->addWidget(statustxt);
   statusbar->addWidget(statustxt2);
   statusbar->setObjectName(QString::fromUtf8("statusbar"));
@@ -362,11 +349,13 @@ void OasiMain::setupTextActions() {
   menuBar()->addMenu(menue);
 
   QAction *a;
-  a = actionUndo = new QAction(QIcon(rsrcPath + "/editundo.png"), tr("&Undo"), this);
+  a = actionUndo =
+      new QAction(QIcon(rsrcPath + "/editundo.png"), tr("&Undo"), this);
   a->setShortcut(QKeySequence::Undo);
   tbe->addAction(a);
   menue->addAction(a);
-  a = actionRedo = new QAction(QIcon(rsrcPath + "/editredo.png"), tr("&Redo"), this);
+  a = actionRedo =
+      new QAction(QIcon(rsrcPath + "/editredo.png"), tr("&Redo"), this);
   a->setShortcut(QKeySequence::Redo);
   tbe->addAction(a);
   menue->addAction(a);
@@ -387,13 +376,7 @@ void OasiMain::setupTextActions() {
   tbe->addAction(a);
   menue->addAction(a);
   actionPaste->setEnabled(false);
-
-
-
-
 }
-
-
 
 bool OasiMain::maybeSave() {
   if (!base_edit->document()->isModified())
@@ -423,8 +406,7 @@ void OasiMain::setCurrentFileName(const QString &fileName) {
     shownName = "untitled.txt";
   else
     shownName = QFileInfo(fileName).fileName();
-  setWindowTitle(_CVERSION_ +
-                 QString(" - %1 - OASIS Open Document").arg(shownName));
+  setWindowTitle(_CVERSION_ + QString(" - %1 - OASIS Open Document").arg(shownName));
   setWindowModified(false);
   base_edit->modus_edit(true);
 }
@@ -437,8 +419,21 @@ void OasiMain::fileNew() {
   }
 }
 
+
+
+void OasiMain::appsOpen(QString file) {
+
+  if (!file.isEmpty()) {
+    QFileInfo fi(file);
+    setter.setValue("LastDir", fi.absolutePath() + "/");
+    load(file);
+  }
+}
+
 void OasiMain::fileOpen() {
-  QString fn = QFileDialog::getOpenFileName(this, tr("Open File..."), QString(setter.value("LastDir").toString()),QString("Document .rtf .odt .doc .docx .html .txt (*)"));
+  QString fn = QFileDialog::getOpenFileName(
+      this, tr("Open File..."), QString(setter.value("LastDir").toString()),
+      QString("Document .rtf .odt .doc .docx .html .txt (*)"));
 
   ///// void QFileDialog::setHistory(const QStringList &paths)
   QFileDialog dialog(this);
@@ -467,7 +462,7 @@ bool OasiMain::fileSave() {
     if (!file.open(QFile::WriteOnly))
       return false;
     QString htmlchunk;
-    DOC::self(this)->DecodeHtml(htmlchunk,base_edit->document());
+    DOC::self(this)->DecodeHtml(htmlchunk, base_edit->document());
     QTextStream ts(&file);
     ts.setCodec(QTextCodec::codecForName("UTF-8"));
     ts << htmlchunk;
@@ -661,24 +656,21 @@ void OasiMain::clipboardDataChanged() {
 }
 
 void OasiMain::DocumentChanged() {
-bool itext = !QApplication::clipboard()->text().isEmpty();
-bool isimage = !QApplication::clipboard()->image().isNull();
-if (itext) {
+  bool itext = !QApplication::clipboard()->text().isEmpty();
+  bool isimage = !QApplication::clipboard()->image().isNull();
+  if (itext) {
     actionPaste->setEnabled(true);
-}
-if (isimage) {
+  }
+  if (isimage) {
     ///// actionPaste->setEnabled(true);
+  }
+
+  actionSave->setEnabled(!base_edit->document()->isModified());
 }
-
-actionSave->setEnabled(!base_edit->document()->isModified());
-}
-
-
 
 void OasiMain::about() {
-  QMessageBox::about(
-      this, tr("About"),
-      tr("This example demonstrates different file format..."));
+  QMessageBox::about(this, tr("About"),
+                     tr("This example demonstrates different file format..."));
 }
 
 void OasiMain::mergeFormatOnWordOrSelection(const QTextCharFormat &format) {
@@ -688,7 +680,6 @@ void OasiMain::mergeFormatOnWordOrSelection(const QTextCharFormat &format) {
   cursor.mergeCharFormat(format);
   base_edit->mergeCurrentCharFormat(format);
 }
-
 
 void OasiMain::fontChanged(const QFont &f) {
   comboFont->setCurrentIndex(comboFont->findText(QFontInfo(f).family()));
@@ -719,18 +710,21 @@ void OasiMain::alignmentChanged(Qt::Alignment a) {
 
 
 
-void OasiMain::setTextMsg( const QString txt ) {
-   //// QLabel *statustxt2, *statustxt;
-   statustxt2->setText(txt);
+/*   void setTextStatus2( const QString txt );
+  void setTextMsg( const QString txt );
+  void TextOnlyTray(const QString txt); */
+
+void OasiMain::setTextStatus2(const QString txt) {
+  //// QLabel *statustxt2, *statustxt;
+  statustxt->setText(txt);
 }
-
-void OasiMain::setTextTray( const QString txt ) {
-   //// QLabel *statustxt2, *statustxt;
-   if (!traytop->isVisible()) {
-      traytop->setVisible(true);
-   }
-   traytop->showMessage(QString("Document Msg."),txt,QSystemTrayIcon::Information,(5*1000));
-   statustxt->setText(txt);
+void OasiMain::setTextMsg(const QString txt) {
+  //// QLabel *statustxt2, *statustxt;
+  statustxt2->setText(txt);
 }
-
-
+void OasiMain::TextOnlyTray(const QString txt) {
+  if (!traytop->isVisible()) {
+    traytop->setVisible(true);
+  }
+  traytop->showMessage(QString("Document Msg."), txt, QSystemTrayIcon::Information, (5 * 1000));
+}

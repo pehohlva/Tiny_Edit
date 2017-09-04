@@ -8,6 +8,8 @@
 
 #define TMPIMAGE QString( "%1/zz_oasi_tmp_image.png" ).arg(QDir::homePath())
 
+
+
 ///// QTextBrowser or QTextEdit ?? big question
 class EditorKernel : public QTextBrowser {
   Q_OBJECT

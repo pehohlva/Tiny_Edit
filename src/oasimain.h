@@ -65,10 +65,12 @@ class OasiMain : public QMainWindow {
   Q_OBJECT
 public:
   explicit OasiMain(QWidget *parent = nullptr);
+  ~OasiMain(void);
 
 signals:
 
 public slots:
+  void appsOpen(QString file);
   bool load(const QString &f);
   bool maybeSave();
   void setCurrentFileName(const QString &fileName);
@@ -99,8 +101,9 @@ public slots:
   void DocumentChanged();
 
   ////
-  void setTextTray( const QString txt );
+  void setTextStatus2( const QString txt );
   void setTextMsg( const QString txt );
+  void TextOnlyTray(const QString txt);
 
 
 

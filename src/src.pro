@@ -76,14 +76,16 @@ HEADERS += imageedit.h \
     editorkernel.h \
     editortable_setting.h \
     ui_forms.h \
-    doc_session.h
+    doc_session.h \
+    oasi_application.h
 
 SOURCES += main.cpp \
     imageedit.cpp \
     oasimain.cpp \
     editorkernel.cpp \
     editortable_setting.cpp \
-    doc_session.cpp
+    doc_session.cpp \
+    oasi_application.cpp
 
 
 ###HEADERS += textedit.h core_application.cpp os_application.h core_application.h
@@ -92,4 +94,5 @@ SOURCES += main.cpp \
 RESOURCES += textedit.qrc
 
 DISTFILES += \
-    Copysheet.txt
+    Copysheet.txt \
+    copy_session

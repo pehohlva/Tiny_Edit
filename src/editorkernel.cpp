@@ -104,13 +104,12 @@ void EditorKernel::Image_mod_Setting() {
         format.setWidth(imgswap.width());
         format.setHeight(imgswap.height());
         format.setName(randomname);
-        QTextDocumentFragment  fragment= QTextDocumentFragment::fromHtml(QString("<p></br></p>"));
+        QTextDocumentFragment fragment =
+            QTextDocumentFragment::fromHtml(QString("<p></br></p>"));
         this->textCursor().insertFragment(fragment);
         this->textCursor().insertImage(format);
         this->document()->addResource(QTextDocument::ImageResource,
                                       QUrl(randomname), imgswap);
-
-
 
       } else {
         qDebug() << "###  image is null ";

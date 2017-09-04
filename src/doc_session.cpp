@@ -55,7 +55,7 @@ action =-1;
 #define IOTT QString("ott")
 #define IPDF QString("pdf")
 #define IZIP QString("zip")
-
+#define MODTM QString("application/vnd.oasis.opendocument.text")
 #define MACTEST QString("_osx_yes")
 
 
@@ -102,6 +102,12 @@ QString DOC::GetHtml( const QString file ) {
     QStringList alii = mimeType.aliases();
     const QString MIMENAME = mimeType.name();
     QFileInfo fi(file);
+    QString namef= file;
+    namef.prepend(fi.fileName() + QString(" - "));
+    namef.append("/");
+    namef.append(Bytes(fi.size()));
+    QString logx = MIMENAME + QString("/") + QString(alii.join(",")) + QString("/") + namef;
+    log_documents(logx); /// know exact type.
     const QString EXT = fi.completeSuffix().toLower();
     if (!fi.exists()) {
         return QString("File not exist:%1").arg(file);
@@ -109,6 +115,7 @@ QString DOC::GetHtml( const QString file ) {
     emit setPriorMessage(QString("Try Open Document: %1").arg(file));
     qDebug() << "load header session section...";
     //// textutils can run on mac or linux a tool to doc convert hidden...
+
     if (EXT == IRTFD || EXT == IDOCX || EXT == IDOC  || EXT == QString("webarchive") ) {
        run_textutils(file); /// go to html
        if (d->toHtml().size() > 33) {
@@ -117,7 +124,7 @@ QString DOC::GetHtml( const QString file ) {
             main = QString("Unable to handle your file:%1").arg(file);
             return main;
        }
-    } else if (EXT == IOTT || EXT == IODT) {
+    } else if (MIMENAME == MODTM) {
          qDebug() << "load odt session section...";
         QString html;
 #ifndef _ODTREADON_
@@ -314,7 +321,7 @@ return inside;
 
 void DOC::DecodeHtml( QString  & html , QTextDocument *d ) {
     if (d->isEmpty()) {
-     QString msg=QString("Is not possibel to deode a Empty Document.");
+     QString msg=QString("Is not possibel to decode a Empty Document.");
      emit setPriorMessage(msg);
      return;
     }
@@ -480,7 +487,7 @@ void DOC::image_grep( QString & html , QString & newhtml ) {
 
 void DOC::incommingText( QString txt ) {
     if (!txt.isEmpty()) {
-       emit setPriorMessage(txt);
+       //// emit setPriorMessage(txt);
     }
   qDebug() << "###  message odt " <<  txt <<" |";
 }
@@ -489,7 +496,27 @@ void DOC::observerDoc() {
          QString xday = Tloac.toString(Qt::SystemLocaleLongDate);
         ///// mainw->SetStatusText(QString("Load: %1").arg(xday));
          QTimer::singleShot(1000, this, SLOT(observerDoc()));
-         emit setPriorMessage(QString("Dc. %1").arg(xday));
+         emit setMessage(QString("Dc. %1").arg(xday));
+}
+
+void DOC::log_documents( QString xtcr ) {
+    //// log mime to have exact association on open file...
+    QString line = xtcr + QString("\n");
+     qDebug() << "### wake " << __FUNCTION__;
+     QFile f(QString("mime_log.txt"));
+               if ( f.open( QFile::Append | QFile::Text ) ) {
+                             QTextStream sw( &f );
+                             sw.setCodec(QTextCodec::codecForName("UTF-8"));
+                             sw << line;
+                             f.close();
+                             if (f.bytesAvailable() > 0) {
+                                qDebug() << "### log ok " << __FUNCTION__;
+                              }
+                      }
+}
+
+void DOC::save() {
+    qDebug() << "### wake " << __FUNCTION__;
 }
 
 
