@@ -17,7 +17,7 @@
 
 #define _NONAMEFILE_ QString("Untitled.txt")
 
-#if 1 //// 1 or 0
+#if 0 //// 1 or 0
 #define SESSDEBUG qDebug
 #define STAGE 1
 #define _debuglogfile_ QString("/Volumes/dati/sandbox/Tiny_Edit/src/mim_log.txt")

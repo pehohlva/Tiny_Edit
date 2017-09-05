@@ -71,7 +71,7 @@ void VoiceBlock::next() {
        return;
     }
     summtotblock = edit->document()->blockCount();
-    stateB++,
+    stateB++;
     SESSDEBUG() << stateB << " - call next - " << now;
     if (stateB < summtotblock) {
     jump_and_Speeach(stateB);
