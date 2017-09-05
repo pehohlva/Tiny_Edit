@@ -229,6 +229,8 @@ void DOC::wakeUpContenent( QString plaintext , const QFileInfo file ) {
         return;
 
     QLocale docl = LanguageDoc(plaintext);
+    const int idlanguage= (int)docl.language();
+    this->setValue(QString("DoumentCurrentLanguage"),QVariant(idlanguage));
     QMimeDatabase mimeDatabase;
     QString namef;
     const QString MIMENAME = mimeDatabase.mimeTypeForFile(file.absoluteFilePath()).name();

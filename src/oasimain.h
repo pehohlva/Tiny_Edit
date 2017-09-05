@@ -59,6 +59,13 @@
 #include <QtXml/qtxmlglobal.h>
 #endif
 
+#ifdef _HAVINGNESONSPEECH_
+#include <QTextToSpeech>
+#include "editvoiceblock.h" /// compiler read block by block text
+#endif
+
+
+class VoiceBlock;
 class EditorKernel;
 
 class OasiMain : public QMainWindow {
@@ -106,6 +113,7 @@ public slots:
   void TextOnlyTray(const QString txt);
   //// voice read block by block
   void runReadBlocks();
+  void stopReadBlocks();
 
 
 
@@ -118,7 +126,7 @@ protected:
   QAction *actionSave, *actionTextBold, *actionTextUnderline, *actionTextItalic,
       *actionTextColor, *actionAlignLeft, *actionAlignCenter, *actionAlignRight,
       *actionAlignJustify, *actionUndo, *actionRedo, *actionCut, *actionCopy,
-      *actionPaste, *actionVoiceBlocks;
+      *actionPaste, *actionVoiceBlocks, *actionStopVoice;
 
   QStatusBar *statusbar;
   QFontComboBox *comboFont;
@@ -133,6 +141,11 @@ protected:
   bool enableedit;
   int currdocsize;
   int firstdocsize;
+#ifdef _HAVINGNESONSPEECH_
+  VoiceBlock *vrspeak;
+#endif
+
+
 };
 
 #endif // OASIMAIN_H

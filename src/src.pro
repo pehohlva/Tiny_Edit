@@ -77,7 +77,8 @@ HEADERS += imageedit.h \
     editortable_setting.h \
     ui_forms.h \
     doc_session.h \
-    oasi_application.h
+    oasi_application.h \
+    editvoiceblock.h
 
 SOURCES += main.cpp \
     imageedit.cpp \
@@ -85,7 +86,8 @@ SOURCES += main.cpp \
     editorkernel.cpp \
     editortable_setting.cpp \
     doc_session.cpp \
-    oasi_application.cpp
+    oasi_application.cpp \
+    editvoiceblock.cpp
 
 
 

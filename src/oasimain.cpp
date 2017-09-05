@@ -22,8 +22,8 @@
 
 #ifdef _HAVINGNESONSPEECH_
 #include <QTextToSpeech>
+#include "editvoiceblock.h" /// read block by block text
 #endif
-
 
 #define __TMPCACHE__ QString("%1/.fastcache/").arg(QDir::homePath())
 
@@ -74,6 +74,8 @@ OasiMain::OasiMain(QWidget *parent) : QMainWindow(parent) {
   setWindowIcon(QIcon(":/images/ODTicon.png"));
   setStyleSheet(xtyle);
   drawall();
+  actionStopVoice->setDisabled(true);
+  actionVoiceBlocks->setDisabled(false);
   base_edit->document()->setUndoRedoEnabled(false);
   base_edit->document()->setDefaultFont(QFont(_WORKDEFAULTFONT_));
   base_edit->setFont(QFont(_WORKDEFAULTFONT_));
@@ -213,6 +215,27 @@ void OasiMain::drawall() {
 
   menu->addSeparator();
 
+#ifdef _HAVINGNESONSPEECH_
+   //// voice_init  init_on
+   ////QToolBar *vtb = new QToolBar(this);
+  /////vtb->setMaximumHeight(toolbarhight);
+  ////vtb->setAllowedAreas(Qt::TopToolBarArea);
+  ////vtb->setWindowTitle(tr("Voice Action"));
+  ////addToolBarBreak(Qt::TopToolBarArea);
+  ////addToolBar(vtb);
+  actionVoiceBlocks = new QAction(QIcon(":/images/oo_icon.png"), tr("Voice Start Read."), this);
+  actionVoiceBlocks->setShortcut(Qt::CTRL + Qt::Key_M);
+  connect(actionVoiceBlocks, SIGNAL(triggered()), this, SLOT(runReadBlocks()));
+  tb->addAction(actionVoiceBlocks);
+  menu->addAction(actionVoiceBlocks);
+
+  actionStopVoice = new QAction(QIcon(":/images/oo_icon.png"), tr("Stop Voice Read."), this);
+  connect(actionStopVoice, SIGNAL(triggered()), this, SLOT(stopReadBlocks()));
+  tb->addAction(actionStopVoice);
+  menu->addAction(actionStopVoice);
+  menu->addSeparator();
+#endif
+
   menu->addAction(maximizeAction);
 
   a = new QAction(tr("&Quit"), this);
@@ -247,6 +270,7 @@ void OasiMain::drawall() {
   setupTextActions();
 }
 void OasiMain::setupTextActions() {
+
   QToolBar *tb = new QToolBar(this);
   tb->setWindowTitle(tr("Format Actions"));
   tb->setMaximumHeight(toolbarhight);
@@ -322,18 +346,7 @@ void OasiMain::setupTextActions() {
   connect(actionTextColor, SIGNAL(triggered()), this, SLOT(textColor()));
   tb->addAction(actionTextColor);
   menu->addAction(actionTextColor);
-#ifdef _HAVINGNESONSPEECH_
-  tb = new QToolBar(this);
-  tb->setMaximumHeight(toolbarhight);
-  tb->setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
-  tb->setWindowTitle(tr("Voice Action"));
-  addToolBarBreak(Qt::TopToolBarArea);
-  addToolBar(tb);
-  actionVoiceBlocks = new QAction(QIcon(":/images/oo_icon.png"), tr("Prepare Block"), this);
-  actionVoiceBlocks->setShortcut(Qt::CTRL + Qt::Key_M);
-  connect(actionVoiceBlocks, SIGNAL(triggered()), this, SLOT(runReadBlocks()));
-  tb->addAction(actionVoiceBlocks);
-#endif
+
   tb = new QToolBar(this);
   tb->setMaximumHeight(toolbarhight);
   tb->setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
@@ -796,35 +809,32 @@ void OasiMain::TextOnlyTray(const QString txt) {
 }
 
 void OasiMain::runReadBlocks() {
-     int stop = 0;
-    const int bls = base_edit->document()->blockCount();
-    if (bls > 22 ) {
-        stop =15;
+
+     vrspeak = new VoiceBlock(this);
+     connect(vrspeak, SIGNAL(endreadPage()), this, SLOT(stopReadBlocks()));
+     connect(vrspeak, SIGNAL(setVoicePriorMessage(QString)), this, SLOT(TextOnlyTray(QString)));
+     if (!actionStopVoice->isEnabled())
+         actionStopVoice->setDisabled(false);
+
+     actionVoiceBlocks->setDisabled(true);
+     vrspeak->init_on(base_edit);
+}
+
+/*   *actionVoiceBlocks, actionStopVoice; */
+void OasiMain::stopReadBlocks() {
+
+    bool run = false;
+
+    if (actionStopVoice->isEnabled()) {
+        run = true;
+
     }
-    QTextCursor dcu = base_edit->textCursor();
-    int blocknr=-1;
-    QTextBlock block = base_edit->document()->begin();
-    while (block.isValid()) {
-            blocknr++;
-            QTextBlockFormat sfo = block.blockFormat();
-            QTextCursor cu(block);
-            SESSDEBUG() << blocknr << " - pos - " << cu.position();
-            if (blocknr == stop) {
-                QColor baks(110,218,230,50);
-                sfo.setBackground( QBrush(baks,Qt::SolidPattern));
-                cu.setBlockFormat(sfo);
-                block.setVisible(true);
-                cu.setBlockFormat(sfo);
-                QString txt = block.text();
-                const int xx = cu.position();
-                 base_edit->setTextCursor(cu);
-                //////SESSDEBUG() << blocknr << " -XXXXX  found " << txt << " - " << cu.position();
-                //////SESSDEBUG() <<  base_edit->textCursor().position();
-            } else {
-              sfo.setBackground( QBrush(Qt::transparent,Qt::SolidPattern));
-              cu.setBlockFormat(sfo);
-            }
-            block = block.next();
+    SESSDEBUG() << __FUNCTION__ <<  "### wake " << run;
+    actionStopVoice->setDisabled(true);
+    actionVoiceBlocks->setDisabled(false);
+
+    if (run) {
+    vrspeak->stopfast();
     }
 
 }

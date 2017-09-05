@@ -579,3 +579,35 @@ load in: "/Users/dev/Documents/tigregrande.fop"
 ### alias  ("image/pjpeg")
 ### name  "image/jpeg"
 */
+-------------
+
+int stop = 0;
+const int bls = base_edit->document()->blockCount();
+if (bls > 22 ) {
+   stop =15;
+}
+QTextCursor dcu = base_edit->textCursor();
+int blocknr=-1;
+QTextBlock block = base_edit->document()->begin();
+while (block.isValid()) {
+       blocknr++;
+       QTextBlockFormat sfo = block.blockFormat();
+       QTextCursor cu(block);
+       SESSDEBUG() << blocknr << " - pos - " << cu.position();
+       if (blocknr == stop) {
+           QColor baks(110,218,230,50);
+           sfo.setBackground( QBrush(baks,Qt::SolidPattern));
+           cu.setBlockFormat(sfo);
+           block.setVisible(true);
+           cu.setBlockFormat(sfo);
+           QString txt = block.text();
+           const int xx = cu.position();
+            base_edit->setTextCursor(cu);
+           //////SESSDEBUG() << blocknr << " -XXXXX  found " << txt << " - " << cu.position();
+           //////SESSDEBUG() <<  base_edit->textCursor().position();
+       } else {
+         sfo.setBackground( QBrush(Qt::transparent,Qt::SolidPattern));
+         cu.setBlockFormat(sfo);
+       }
+       block = block.next();
+}
