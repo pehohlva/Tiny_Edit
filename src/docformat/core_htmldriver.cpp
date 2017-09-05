@@ -7,10 +7,10 @@ HtmlDriver::HtmlDriver()
     fullhtmlnow = QString("textutil -convert .. unable to read! or not mac osx.");
     txtutils = run_which(QStringLiteral("textutil"));
     clean_cache();
-    //// qDebug() << "### cacheop dir = " <<  cacheop;
 }
 
 HtmlDriver::~HtmlDriver() {
+   qDebug() << "### clean " <<  __FUNCTION__ << CACHEBUFFERDISKTMP;
    DownDir_RM(CACHEBUFFERDISKTMP);
 }
 
@@ -24,6 +24,7 @@ void HtmlDriver::clean_cache() {
     if (dirsystem.mkpath(CACHEBUFFERDISKTMP)) {
         cacheop = 1;
     }
+    qDebug() << "### clean " <<  __FUNCTION__ << CACHEBUFFERDISKTMP;
 }
 
 
@@ -37,7 +38,7 @@ void HtmlDriver::disk_textutils( const QString file ) {
     if (is_file(CACHEFILETMP)) {
         unlink(CACHEFILETMP);
     }
-    qDebug() << "### handler use-> " <<  __FUNCTION__ << file;
+
      if (txtutils.size() < 4) {
          QByteArray simhtml("<h1>Your System not support 'textutil' or is not Install!.<h1/>");
          HTMLCOMPRESSED = qCompress(simhtml,9);

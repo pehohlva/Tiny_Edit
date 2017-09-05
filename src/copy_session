@@ -1,3 +1,4 @@
+
 #include "doc_session.h"
 
 #include "oasimain.h"
@@ -11,7 +12,6 @@
 #include <QObject>
 #include "editorkernel.h"
 
-
 QPointer<DOC> DOC::_self = 0L;
 
 DOC *DOC::self(QObject *parent) {
@@ -22,13 +22,8 @@ DOC *DOC::self(QObject *parent) {
 
 DOC::DOC(QObject *parent) : QObject(parent) {
 d = new QTextDocument(parent);
-QDir dirsystem;
-if (!dirsystem.mkpath(CACHEBUFFERDISKTMP)) {
-   qWarning() << "Failed to mkdir cache  " << CACHEBUFFERDISKTMP;
-}
 action =-1;
    QTimer::singleShot(1000, this, SLOT(observerDoc()));
-loading = false;
 }
 
 
@@ -101,7 +96,6 @@ static inline QString Bytes(const qint64 size)
 
 QString DOC::GetHtml( const QString file ) {
     f = file;
-    loading = true;
     QString main;
     QMimeDatabase mimeDatabase;
     QMimeType mimeType;
@@ -113,7 +107,7 @@ QString DOC::GetHtml( const QString file ) {
     namef.prepend(fi.fileName() + QString(" - "));
     namef.append("/");
     namef.append(Bytes(fi.size()));
-    QString logx =  QString("{%1} - ").arg(MIMENAME) + QString(alii.join(",")) + QString(" - ") + namef;
+    QString logx = MIMENAME + QString("/") + QString(alii.join(",")) + QString("/") + namef;
     log_documents(logx); /// know exact type.
     const QString EXT = fi.completeSuffix().toLower();
     if (!fi.exists()) {
@@ -223,46 +217,6 @@ QString DOC::GetHtml( const QString file ) {
 return QString();
 }
 
-
-void DOC::wakeUpContenent( QString plaintext , const QFileInfo file ) {
-    if (loading)
-        return;
-
-    QLocale docl = LanguageDoc(plaintext);
-    QMimeDatabase mimeDatabase;
-    QString namef;
-    const QString MIMENAME = mimeDatabase.mimeTypeForFile(file.absoluteFilePath()).name();
-    if (file.exists()) {
-        namef.prepend(file.fileName() + QString(" - "));
-        namef.append(" ");
-        namef.append(Bytes(file.size()));
-    }
-    DOC_INFONOW = namef;
-    const QString lang = docl.nativeLanguageName();
-    const int bhsize  = plaintext.size();
-    QString tlean = plaintext.trimmed();
-    ALLWORD.clear();
-    ALLWORD = tlean.split(" ");
-    const int totalwords = ALLWORD.size();
-    if (totalwords < 2) {
-        DOC_INFONOW = _NONAMEFILE_;
-    }
-     if (file.exists()) {
-    QString rec = DOC_INFONOW + QString(" Word:%1/Char:%2").arg(totalwords).arg(bhsize) + QString("-Lang:%1").arg(lang);
-    emit setMessage(rec);
-     } else {
-         if (bhsize < 33) {
-         QString rec = _NONAMEFILE_ + QString(" / ") + QString("-Lang:%1").arg(lang);
-         emit setMessage(rec);
-         } else {
-            QString rec = _NONAMEFILE_ + QString(" / Save your work..") + QString("-Lang:%1").arg(lang);
-            emit setMessage(rec);
-         }
-     }
-
-}
-
-
 QTextDocument* DOC::GetQdoc( const QString file ) {
     QMimeDatabase mimeDatabase;
     QMimeType mimeType;
@@ -275,23 +229,17 @@ QTextDocument* DOC::GetQdoc( const QString file ) {
         namef.append(" ");
         namef.append(Bytes(fo.size()));
     }
-    DOC_INFONOW = namef;
-    if (!DOC_INFONOW.isEmpty()) {
-    emit setMessage(DOC_INFONOW);
-    }
+    emit setMessage(namef);
 
     if (file == f) {
-        loading = false;
        return  d;
     } else {
         const QString x = GetHtml(file);
         if (x.size() < 5) {
            d->setPlainText(QString("Unable to open your file %1 - %2.").arg(file).arg(namef));
         }
-        loading = false;
         return  d;
     }
- loading = false;
  return  d;
 }
 
@@ -376,7 +324,6 @@ void DOC::DecodeHtml( QString  & html , QTextDocument *d ) {
      emit setPriorMessage(msg);
      return;
     }
-
     QDateTime UTC(QDateTime::currentDateTimeUtc());
     QDateTime local(UTC.toLocalTime());
     d->setMetaInformation(QTextDocument::DocumentTitle,QString("Oasis Document Encode/created Portable-Images - %1").arg( local.toString()));
@@ -545,11 +492,11 @@ void DOC::incommingText( QString txt ) {
 }
 void DOC::observerDoc() {
 
-    //////SESSDEBUG() << "### wake " << __FUNCTION__;
+    SESSDEBUG() << "### wake " << __FUNCTION__;
 
-    /////QTextDocument *xd = new QTextDocument();
-    /////SESSDEBUG() << "### wake html size " << xd->toHtml("utf_8").size();
-    //////SESSDEBUG() << "### wake plain size " << xd->toPlainText().size();
+    QTextDocument *xd = new QTextDocument();
+    SESSDEBUG() << "### wake html size " << xd->toHtml("utf_8").size();
+    SESSDEBUG() << "### wake plain size " << xd->toPlainText().size();
 
          QDateTime Tloac = QDateTime::currentDateTime().toLocalTime();
          QString xday = Tloac.toString(Qt::SystemLocaleLongDate);
@@ -558,33 +505,16 @@ void DOC::observerDoc() {
          emit setMessageBase(QString("Dc. %1").arg(xday));
 }
 
-
-
-
-void DOC::setValue( const QString name , QVariant data ) {
-    QSettings session_s(QString("OasiClub"), QString("OasiEditor"));
-              session_s.setValue(name,data);
-}
-
-QVariant DOC::value(const QString name ) {
-     QSettings session_s(QString("OasiClub"), QString("OasiEditor"));
-     return session_s.value(name);
-}
-
-
-
 void DOC::log_documents( QString xtcr ) {
     //// log mime to have exact association on open file...
     QString line = xtcr + QString("\n");
-
-    QString logdd = readcfile(_debuglogfile_);
-             logdd.prepend(xtcr);
+    const QString filelog("mime_log.txt");
      SESSDEBUG() << "### wake " << __FUNCTION__;
      QFile f(_debuglogfile_);
-               if ( f.open( QFile::Truncate | QFile::Text ) ) {
+               if ( f.open( QFile::Append | QFile::Text ) ) {
                              QTextStream sw( &f );
                              sw.setCodec(QTextCodec::codecForName("UTF-8"));
-                             sw << logdd;
+                             sw << line;
                              f.close();
                              if (f.bytesAvailable() > 0) {
                                 SESSDEBUG() << workdirectory <<  "### log ok " << __FUNCTION__;
@@ -593,46 +523,12 @@ void DOC::log_documents( QString xtcr ) {
 }
 
 void DOC::save() {
-   //////  DownDir_RM(CACHEBUFFERDISKTMP);
-    QDir trash(CACHEBUFFERDISKTMP);
-    SESSDEBUG() << "###  trash.exists() " << trash.exists() <<  " by by wake " << __FUNCTION__;
+    qDebug() << "### wake " << __FUNCTION__;
 }
 void DOC::setDir(const QString workdir ) {
     workdirectory = workdir;
 }
-void DOC::installfont( bool inout ) {
-QFontDatabase fontDatabase;
-QStringList pushfont;
-pushfont << QStringLiteral("Ubuntu-B.ttf");
-pushfont << QStringLiteral("Ubuntu-L.ttf");
-pushfont << QStringLiteral("Ubuntu-MI.ttf");
-pushfont << QStringLiteral("UbuntuMono-B.ttf");
-pushfont << QStringLiteral("UbuntuMono-RI.ttf");
-pushfont << QStringLiteral("Ubuntu-BI.ttf");
-pushfont << QStringLiteral("Ubuntu-LI.ttf");
-pushfont << QStringLiteral("Ubuntu-R.ttf");
-pushfont << QStringLiteral("UbuntuMono-BI.ttf");
-pushfont << QStringLiteral("Ubuntu-C.ttf");
-pushfont << QStringLiteral("Ubuntu-RI.ttf");
-pushfont << QStringLiteral("Ubuntu-M.ttf");
-pushfont << QStringLiteral("Ubuntu-R.ttf");
-        if (inout) {
-            for (int x = 0; x < pushfont.size(); x++) {
-                const  QString fox = QString(":/font/%1").arg(pushfont.at(x));
-                if (fontDatabase.addApplicationFont(fox) == -1) {
-                     qWarning() << "Failed to load " << fox;
-                } else {
-                     SESSDEBUG() << "Install success " << fox;
-                }
-            }
-        } else {
-            if (fontDatabase.removeAllApplicationFonts()) {
-                 SESSDEBUG() << "Remove fonts success " << pushfont;
-            } else {
-                qWarning() << "Failed to remove font ";
-            }
-        }
-}
+
 /* ### comment  "Documento RTF"
 ### alias  ("text/rtf")
 ### name  "application/rtf"

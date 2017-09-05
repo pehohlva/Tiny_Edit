@@ -7,6 +7,6 @@ find . -name '.DS_Store' -type f -delete
 find . -name 'Makefile' -type f -delete
 find . -name 'Makefile.Release' -type f -delete
 find . -name 'Makefile.Debug' -type f -delete
-qmake && make
+qmake && make && macdeployqt OasisEdit.app
 
 

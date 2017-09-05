@@ -6,18 +6,34 @@
 #include <QTextDocument>
 #include <QWidget>
 #include <QSettings>
+#include "docformat/core_htmldriver.h"
 
 #define _BASICORG_ QString("QTClub")
 #define _BASICDOMAINE_ QString("org.freeroad.ch")
 #define _BASICTITLE_EDITOR_ QString("OasisEdit - Document Tiny Editor")
 #define _CVERSION_ QString("Vr. 1.2")
+#define _WORKDEFAULTFONT_ QString("Ubuntu-C")
+
+
+#define _NONAMEFILE_ QString("Untitled.txt")
+
+#if 1 //// 1 or 0
+#define SESSDEBUG qDebug
+#define STAGE 1
+#define _debuglogfile_ QString("/Volumes/dati/sandbox/Tiny_Edit/src/mim_log.txt")
+#else
+#define SESSDEBUG                                                               \
+  if (0)                                                                       \
+  qDebug
+#define STAGE 0
+#define _debuglogfile_ QString("")
+#endif
 
 
 static inline QString unixwhich(QString apps = QString("gs")) {
 #ifdef Q_OS_WIN
   return QString();
 #endif
-
   QStringList potential_paths;
   potential_paths.append("/usr/bin");
   potential_paths.append("/usr/local/bin");
@@ -42,6 +58,22 @@ static inline QString unixwhich(QString apps = QString("gs")) {
   }
 }
 
+
+#ifndef _QCLD2NO_
+#include <qtrlocale.h>
+ static inline QLocale LanguageDoc( const QString txt ) {
+        QTrlocale Vtr;
+        return Vtr.getQlocaleFromText(txt);
+  }
+#else
+  static inline QLocale LanguageDoc( const QString txt ) {
+         return QLocale::system();
+   }
+#endif
+
+
+
+
 class DOC : public QObject {
   Q_OBJECT
 
@@ -50,6 +82,10 @@ public:
   QString
   GetHtml(const QString file); //// null if QTextDocument is ok or html no image
   QTextDocument *GetQdoc(const QString file);
+
+  QVariant value(const QString name ); /// qsetting
+  void setValue( const QString name , QVariant data ); /// qsetting
+
   bool haveBase64pics(const QString html);
   //// html + base64 encodet image go normal to QTextDocument back
   void HtmlDecode(QString &html, QTextDocument *d);
@@ -65,7 +101,10 @@ signals:
 public slots:
   void incommingText( QString txt );
   void log_documents( QString xtcr );
+  void wakeUpContenent(QString plaintext , const QFileInfo file);
   void save();
+  void setDir(const QString workdir );
+  void installfont( bool inout );
 private slots:
   void observerDoc();
 
@@ -75,11 +114,14 @@ private:
   void run_textutils(const QString file);
   void image_grep(QString &html, QString &newhtml);
   QTextDocument *d;
-  QTextDocument *picsdoc;
   int action;
+  QString workdirectory;
   QString txtutils;
+  QString DOC_INFONOW;
   QString msg;
+  QStringList ALLWORD;
   QString f;
+  bool loading;
 };
 
 #endif // DOC_SESSION_H

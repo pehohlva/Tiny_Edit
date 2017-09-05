@@ -20,6 +20,9 @@
 #include "doc_session.h"
 #include "editorkernel.h"
 
+#ifdef _HAVINGNESONSPEECH_
+#include <QTextToSpeech>
+#endif
 
 
 #define __TMPCACHE__ QString("%1/.fastcache/").arg(QDir::homePath())
@@ -33,24 +36,36 @@ static const QString rsrcPath = ":/images/win";
 
 static const QString _not_save_doc_ = QString("document.odt");
 
-QSettings setter(QString("OasiClub"), QString("OasiEditor"));
-
 static const int toolbarhight = 25;
 static const QString xtyle = QString(""); ///// background-color: #c0d6d5;
 
 bool OasiMain::load(const QString &f) {
+  currentin = QFileInfo(f);
   const QString html = DOC::self(this)->GetHtml(f);  //// no images
   QTextDocument *xdoc = DOC::self(this)->GetQdoc(f); //// images clone here
   bool filldocobj = (xdoc->isEmpty())? false: true;
   if (html.isEmpty()) {
     base_edit->setDocument(xdoc);
     setCurrentFileName(f);
+    connect(base_edit->document(), SIGNAL(modificationChanged(bool)), this,
+            SLOT(DocumentChanged()));
+    firstdocsize = base_edit->document()->toPlainText().size();
+    base_edit->document()->setDefaultFont(QFont(_WORKDEFAULTFONT_));
     return true;
   } else {
     base_edit->setHtml(html);
+    base_edit->document()->setDefaultFont(QFont(_WORKDEFAULTFONT_));
     setCurrentFileName(f);
+    connect(base_edit->document(), SIGNAL(modificationChanged(bool)), this,
+            SLOT(DocumentChanged()));
+    firstdocsize = base_edit->document()->toPlainText().size();
     return true;
   }
+
+  /*  int currdocsize;
+  int firstdocsize; */
+
+
 }
 
 OasiMain::OasiMain(QWidget *parent) : QMainWindow(parent) {
@@ -60,6 +75,8 @@ OasiMain::OasiMain(QWidget *parent) : QMainWindow(parent) {
   setStyleSheet(xtyle);
   drawall();
   base_edit->document()->setUndoRedoEnabled(false);
+  base_edit->document()->setDefaultFont(QFont(_WORKDEFAULTFONT_));
+  base_edit->setFont(QFont(_WORKDEFAULTFONT_));
 
   connect(base_edit, SIGNAL(currentCharFormatChanged(const QTextCharFormat &)),
           this, SLOT(currentCharFormatChanged(const QTextCharFormat &)));
@@ -77,8 +94,6 @@ OasiMain::OasiMain(QWidget *parent) : QMainWindow(parent) {
   colorChanged(base_edit->textColor());
   alignmentChanged(base_edit->alignment());
 
-  connect(base_edit->document(), SIGNAL(modificationChanged(bool)), actionSave,
-          SLOT(setEnabled(bool)));
   connect(base_edit->document(), SIGNAL(modificationChanged(bool)), this,
           SLOT(DocumentChanged()));
 
@@ -109,10 +124,16 @@ OasiMain::OasiMain(QWidget *parent) : QMainWindow(parent) {
           SLOT(setEnabled(bool)));
   connect(base_edit, SIGNAL(copyAvailable(bool)), actionCopy,
           SLOT(setEnabled(bool)));
-
+  setWindowTitle(_CVERSION_ + QString(" - %1").arg(_BASICTITLE_EDITOR_));
+  this->setIconSize(QSize(24,24));
   //// connect(QApplication::clipboard(), SIGNAL(dataChanged()), this,
   /// SLOT(clipboardDataChanged()));
   show();
+
+
+  currentin = QFileInfo(_NONAMEFILE_);
+
+
   base_edit->document()->setUndoRedoEnabled(true);
   traytop->showMessage(_BASICTITLE_EDITOR_,
                        QString("End Loading Setting... Open File by CTRL+O "),
@@ -126,7 +147,7 @@ OasiMain::~OasiMain(void) {
 }
 
 void OasiMain::drawall() {
-
+  firstdocsize = 0;
   QMenuBar *xtop = menuBar();
   QToolBar *tb = new QToolBar();
   tb->setMaximumHeight(toolbarhight);
@@ -301,7 +322,18 @@ void OasiMain::setupTextActions() {
   connect(actionTextColor, SIGNAL(triggered()), this, SLOT(textColor()));
   tb->addAction(actionTextColor);
   menu->addAction(actionTextColor);
-
+#ifdef _HAVINGNESONSPEECH_
+  tb = new QToolBar(this);
+  tb->setMaximumHeight(toolbarhight);
+  tb->setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
+  tb->setWindowTitle(tr("Voice Action"));
+  addToolBarBreak(Qt::TopToolBarArea);
+  addToolBar(tb);
+  actionVoiceBlocks = new QAction(QIcon(":/images/oo_icon.png"), tr("Prepare Block"), this);
+  actionVoiceBlocks->setShortcut(Qt::CTRL + Qt::Key_M);
+  connect(actionVoiceBlocks, SIGNAL(triggered()), this, SLOT(runReadBlocks()));
+  tb->addAction(actionVoiceBlocks);
+#endif
   tb = new QToolBar(this);
   tb->setMaximumHeight(toolbarhight);
   tb->setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
@@ -400,12 +432,12 @@ bool OasiMain::maybeSave() {
 void OasiMain::setCurrentFileName(const QString &fileName) {
   this->fileName = fileName;
   base_edit->document()->setModified(false);
-
+  currentin = QFileInfo(fileName);
   QString shownName;
   if (fileName.isEmpty())
-    shownName = "untitled.txt";
+    shownName = _NONAMEFILE_;
   else
-    shownName = QFileInfo(fileName).fileName();
+    shownName = currentin.fileName();
   setWindowTitle(_CVERSION_ + QString(" - %1 - OASIS Open Document").arg(shownName));
   setWindowModified(false);
   base_edit->modus_edit(true);
@@ -414,25 +446,43 @@ void OasiMain::setCurrentFileName(const QString &fileName) {
 void OasiMain::fileNew() {
   if (maybeSave()) {
     base_edit->clear();
+    firstdocsize = 0;
     setCurrentFileName(QString());
     base_edit->modus_edit(true);
   }
 }
 
-
-
+//// from main in drag to dock mac linux
 void OasiMain::appsOpen(QString file) {
-
+    currentin = QFileInfo(file);
+    QMimeDatabase mimeDatabase;
+    const QString MIMENAME = mimeDatabase.mimeTypeForFile(currentin.absoluteFilePath()).name();
+    QImage test;
+           test.load(currentin.absoluteFilePath());
+    if (MIMENAME.contains("image/") && !test.isNull()) {
+       base_edit->insertImage(currentin.absoluteFilePath());
+       return;
+    }
+    if (fileName.isEmpty()) {
+      fileSaveAs();
+    }
   if (!file.isEmpty()) {
-    QFileInfo fi(file);
-    setter.setValue("LastDir", fi.absolutePath() + "/");
+    currentin = QFileInfo(file);
+    DOC::self(this)->setValue("LastDir", currentin.absolutePath() + "/");
     load(file);
   }
 }
 
+
+void OasiMain::closeEvent (QCloseEvent *event) {
+    event->ignore();
+    emit request_to_close();
+}
+
+
 void OasiMain::fileOpen() {
   QString fn = QFileDialog::getOpenFileName(
-      this, tr("Open File..."), QString(setter.value("LastDir").toString()),
+      this, tr("Open File..."), QString(DOC::self(this)->value("LastDir").toString()),
       QString("Document .rtf .odt .doc .docx .html .txt (*)"));
 
   ///// void QFileDialog::setHistory(const QStringList &paths)
@@ -443,16 +493,19 @@ void OasiMain::fileOpen() {
   ///
   if (!fn.isEmpty()) {
     QFileInfo fi(fn);
-    setter.setValue("LastDir", fi.absolutePath() + "/");
+    DOC::self(this)->setValue("LastDir", fi.absolutePath() + "/");
     load(fn);
   }
 }
 
 bool OasiMain::fileSave() {
+    //// const int docsizeNOW = base_edit->document()->toPlainText().size();
+
   if (fileName.isEmpty())
     return fileSaveAs();
 
   bool canodt = true;
+  currentin = QFileInfo(fileName);
   const QString ext = QFileInfo(fileName).completeSuffix().toLower();
   if (ext == "odt" && canodt) {
     QTextDocumentWriter writer(fileName);
@@ -480,8 +533,7 @@ bool OasiMain::fileSaveAs() {
 #else
   support = tr("HTML-Files (*.htm *.html);;All Files (*)");
 #endif
-  QString fn =
-      QFileDialog::getSaveFileName(this, tr("Save as..."), QString(), support);
+  QString fn = QFileDialog::getSaveFileName(this, tr("Save as..."), QString(), support);
   if (fn.isEmpty())
     return false;
   setCurrentFileName(fn);
@@ -645,14 +697,17 @@ void OasiMain::textAlign(QAction *a) {
 void OasiMain::currentCharFormatChanged(const QTextCharFormat &format) {
   fontChanged(format.font());
   colorChanged(format.foreground().color());
+  DocumentChanged();
 }
 
 void OasiMain::cursorPositionChanged() {
   alignmentChanged(base_edit->alignment());
+  DocumentChanged();
 }
 
 void OasiMain::clipboardDataChanged() {
   actionPaste->setEnabled(!QApplication::clipboard()->text().isEmpty());
+ DocumentChanged();
 }
 
 void OasiMain::DocumentChanged() {
@@ -662,10 +717,21 @@ void OasiMain::DocumentChanged() {
     actionPaste->setEnabled(true);
   }
   if (isimage) {
-    ///// actionPaste->setEnabled(true);
+    actionPaste->setEnabled(true);
   }
+  /*  int currdocsize;
+  int firstdocsize; */
+  const QString txta = base_edit->document()->toPlainText();
+  DOC::self(this)->wakeUpContenent(txta,currentin);
 
-  actionSave->setEnabled(!base_edit->document()->isModified());
+  currdocsize =txta.size();
+  SESSDEBUG() << "### wake " << __FUNCTION__  << currdocsize << firstdocsize;
+  if (firstdocsize != currdocsize) {
+  actionSave->setEnabled(true);
+  ////// debug traytop->showMessage(QString("Document Msg."), QString("Save open..."), QSystemTrayIcon::Information, (5 * 1000));
+  } else {
+    actionSave->setEnabled(false);
+  }
 }
 
 void OasiMain::about() {
@@ -727,4 +793,38 @@ void OasiMain::TextOnlyTray(const QString txt) {
     traytop->setVisible(true);
   }
   traytop->showMessage(QString("Document Msg."), txt, QSystemTrayIcon::Information, (5 * 1000));
+}
+
+void OasiMain::runReadBlocks() {
+     int stop = 0;
+    const int bls = base_edit->document()->blockCount();
+    if (bls > 22 ) {
+        stop =15;
+    }
+    QTextCursor dcu = base_edit->textCursor();
+    int blocknr=-1;
+    QTextBlock block = base_edit->document()->begin();
+    while (block.isValid()) {
+            blocknr++;
+            QTextBlockFormat sfo = block.blockFormat();
+            QTextCursor cu(block);
+            SESSDEBUG() << blocknr << " - pos - " << cu.position();
+            if (blocknr == stop) {
+                QColor baks(110,218,230,50);
+                sfo.setBackground( QBrush(baks,Qt::SolidPattern));
+                cu.setBlockFormat(sfo);
+                block.setVisible(true);
+                cu.setBlockFormat(sfo);
+                QString txt = block.text();
+                const int xx = cu.position();
+                 base_edit->setTextCursor(cu);
+                //////SESSDEBUG() << blocknr << " -XXXXX  found " << txt << " - " << cu.position();
+                //////SESSDEBUG() <<  base_edit->textCursor().position();
+            } else {
+              sfo.setBackground( QBrush(Qt::transparent,Qt::SolidPattern));
+              cu.setBlockFormat(sfo);
+            }
+            block = block.next();
+    }
+
 }

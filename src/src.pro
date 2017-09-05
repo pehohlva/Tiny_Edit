@@ -88,6 +88,22 @@ SOURCES += main.cpp \
     oasi_application.cpp
 
 
+
+#### install lib from https://github.com/pehohlva/QCLD2
+#### to deactivate write xxxx55core module not exist
+qtHaveModule(core) {
+INCLUDEPATH += /usr/local/include
+DEPENDPATH += /usr/local/include
+LIBS +=/usr/local/lib/libqcld2.a
+message( "  QCLD2 load " )
+} else {
+DEFINES += _QCLD2NO_
+message( "  Deactivate lib QCLD2 language discovery offline. " )
+}
+
+
+
+
 ###HEADERS += textedit.h core_application.cpp os_application.h core_application.h
 ###SOURCES += textedit.cpp
 

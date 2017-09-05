@@ -41,6 +41,26 @@
         <file>images/win/textunder.png</file>
         <file>images/win/zoomin.png</file>
         <file>images/win/zoomout.png</file>
+        <file>images/icon.png</file>
+        <file>images/info.png</file>
+        <file>images/link.png</file>
+        <file>images/listen.png</file>
+        <file>images/pictures.png</file>
+        <file>images/row_table.png</file>
+        <file>images/table.png</file>
+        <file>font/Ubuntu-B.ttf</file>
+        <file>font/Ubuntu-BI.ttf</file>
+        <file>font/Ubuntu-C.ttf</file>
+        <file>font/Ubuntu-L.ttf</file>
+        <file>font/Ubuntu-LI.ttf</file>
+        <file>font/Ubuntu-M.ttf</file>
+        <file>font/Ubuntu-MI.ttf</file>
+        <file>font/Ubuntu-R.ttf</file>
+        <file>font/Ubuntu-RI.ttf</file>
+        <file>font/UbuntuMono-B.ttf</file>
+        <file>font/UbuntuMono-BI.ttf</file>
+        <file>font/UbuntuMono-R.ttf</file>
+        <file>font/UbuntuMono-RI.ttf</file>
     </qresource>
     <qresource prefix="/trolltech/dialogs/qprintpreviewdialog">
         <file>images/fit-page-24.png</file>

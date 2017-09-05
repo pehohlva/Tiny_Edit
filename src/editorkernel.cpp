@@ -7,15 +7,21 @@
 #include "editortable_setting.h"
 #include "imageedit.h"
 #include "ui_forms.h"
+#include "doc_session.h"
 
-EditorKernel::EditorKernel() : QTextBrowser() {
+
+static const qreal TRACKPADSTEEPS = 0.013555555;
+static const qreal SLIDERMARGIN_TICK = 25.0;
+static const qreal SLIDERSPACER = 2.5;
+
+EditorKernel::EditorKernel() : QTextBrowser(),scaleFaktor(1.367) {
   edit_yes = true;
   active_or_not = 10;
   modus_edit(edit_yes);
   this->setContentsMargins(0, 0, 0, 0);
   screenprint = new QShortcut(QKeySequence(tr("Ctrl+W", "Print Screen")), this);
   connect(screenprint, SIGNAL(activated()), this, SLOT(MakePrintScreen()));
-  //// this->document();
+  this->setFont(QFont(_WORKDEFAULTFONT_));
 }
 
 void EditorKernel::switchEditModus() {
@@ -122,7 +128,9 @@ void EditorKernel::Image_mod_Setting() {
 
 void EditorKernel::contextMenuEvent(QContextMenuEvent *event) {
   QMenu *menu = this->createStandardContextMenu();
-
+  menu->addAction(QIcon(QString::fromUtf8(":/images/mac/filenew.png")),
+             tr("Remove Format Font size all.."), this,
+             SLOT(removeFormat()));
   menu->addSeparator();
 
   QPixmap pix(22, 22);
@@ -139,29 +147,39 @@ void EditorKernel::contextMenuEvent(QContextMenuEvent *event) {
   Eimage = nowimage.isValid();
   Etable = lastcursor.currentTable();
   isqtextblok = textblocc.isValid();
+  //// QAction *addAction(const QIcon &icon, const QString &text, const QObject *receiver, const char* member, const QKeySequence &shortcut = 0);
 
   if (nowimage.isValid()) {
     QString picname = nowimage.name();
-    qDebug() << "### picnamepicnamepicnamepicnamepicnamepicname  " << picname;
     QFileInfo locinfo(picname);
-    menu->addAction(
+    menu->addAction(QIcon(QString::fromUtf8(":/images/pictures.png")),
         tr("Image edit \"%1\" width - height").arg(locinfo.fileName()), this,
         SLOT(Image_mod_Setting()));
   }
 
+    menu->addAction(QIcon(QString::fromUtf8(":/images/pictures.png")),
+      tr("Insert new image/images Multiselect"), this,
+      SLOT(CreateanewImage()));
+    menu->addAction(QIcon(QString::fromUtf8(":/images/pictures.png")),
+      tr("Grab Print Screen"), this,
+      SLOT(MakePrintScreen()),QKeySequence(tr("Ctrl+W")));
+
+
+
   tableContext = new QMenu(tr("Table Option"), this);
-  tableContext->setIcon(QIcon(QString::fromUtf8(":/img/table.png")));
+  tableContext->setIcon(QIcon(QString::fromUtf8(":/images/table.png")));
   tableContext->addAction(tr("Insert Table here"), this,
                           SLOT(CreateanewTable()));
 
   menu->addMenu(tableContext);
+  //// menu->addMenu(imageContext);
 
   if (lastcursor.currentTable()) {
     tableContext->addAction(
-        QIcon(QString::fromUtf8(":/img/table.png")),
+        QIcon(QString::fromUtf8(":/images/table.png")),
         tr("Table (this) Propriety BackgroundColor, Padding, Spacing"), this,
         SLOT(TableSetting()));
-    tableContext->addAction(QIcon(QString::fromUtf8(":/img/row_table.png")),
+    tableContext->addAction(QIcon(QString::fromUtf8(":/images/row_table.png")),
                             tr("Merge selected cell (if select)"), this,
                             SLOT(MergeCellByCursorPosition()));
     tableContext->addAction(tr("Append Row on this table"), this,
@@ -178,6 +196,88 @@ void EditorKernel::contextMenuEvent(QContextMenuEvent *event) {
   }
   qDebug() << "### xxxx  " << event->globalPos();
   menu->popup(event->globalPos());
+}
+
+
+void EditorKernel::CreateanewImage() {
+  QStringList pics = QFileDialog::getOpenFileNames(
+      this, tr("Choose Image"), QString(DOC::self(this)->value("LastDirImage").toString()),
+      tr("Image Files supported (*)"));
+  if (pics.size() < 1) {
+    return;
+  }
+     bool oki = true;
+       for (int x = 0; x < pics.size(); x++) {
+           QFileInfo fox(pics.at(x));
+           QImage base;
+           base.load(fox.absoluteFilePath());
+           if (!base.isNull()) {
+                DOC::self(this)->setValue("LastDirImage",QVariant(fox.absolutePath()));
+                 insertImage(fox.absoluteFilePath());
+           } else {
+               oki = false;
+           }
+       }
+    if (!oki) {
+      QMessageBox::warning(
+          this, tr("Image Plugin"),
+          tr("Pleas install the plugin for this format.. or select other..\nOr "
+             "copy and paste image from your images application. \nTo convert on "
+             "web image. png jpg gif"));
+      return;
+    }
+}
+
+
+void EditorKernel::SetColumLarge() {
+  /* QTextTable  *nowtable; */
+  QTextCursor findercursor(this->textCursor());
+  Etable = findercursor.currentTable();
+  if (Etable) {
+    QTextTableCell existingcell = nowtable->cellAt(findercursor);
+
+    QTextTableFormat tbforms = nowtable->format();
+
+    int cellcoolcursoris =
+        existingcell.column(); /* int value start from zero */
+    /* get lengh % to set on cell .... */
+    bool ok;
+    int LargeSet =
+        QInputDialog::getInt(this, tr("Set Cell Width"),
+                             tr("Percentage Length:"), 10, 1, 100, 1, &ok);
+    if (ok && LargeSet > 0) {
+      QVector<QTextLength> constraints = tbforms.columnWidthConstraints();
+      for (int i = 0; i < constraints.size(); ++i) {
+        if (i == cellcoolcursoris) {
+          constraints.replace(
+              i, QTextLength(QTextLength::PercentageLength, LargeSet));
+        }
+      }
+      tbforms.setColumnWidthConstraints(constraints);
+
+      nowtable->setFormat(tbforms);
+    }
+  }
+}
+
+void EditorKernel::SetTableCellColor() {
+  /* QTextTable  *nowtable; */
+  QTextCursor findercursor(this->textCursor());
+  Etable = findercursor.currentTable();
+  if (Etable) {
+    bool ok;
+    QTextTableCell existingcell = nowtable->cellAt(findercursor);
+    /* reformat this -> existingcell */
+    QTextCharFormat existformat = existingcell.format();
+    /* get color */
+    QColor col = QColorDialog::getRgba(NULL, &ok, this);
+    if (!col.isValid()) {
+      return;
+    }
+    QBrush stylesin(col);
+    existformat.setBackground(stylesin);
+    existingcell.setFormat(existformat);
+  }
 }
 
 void EditorKernel::MakePrintScreen() {
@@ -371,4 +471,49 @@ void EditorKernel::RepaintScreen() {
   QTextCursor c(this->document());
   c.beginEditBlock();
   switchEditModus(); /// reset to last modus..
+}
+
+
+bool EditorKernel::event(QEvent * e) {
+    if (e->type() == QEvent::NativeGesture) {
+      return gestureNative(static_cast < QNativeGestureEvent * > (e));
+    } else if (e->type() == QEvent::ContextMenu) {
+      contextMenuEvent(static_cast < QContextMenuEvent * > (e));
+      e->accept();
+    }  else {
+       return QTextBrowser::event(e);
+    }
+}
+
+void EditorKernel::removeFormat()
+{
+    const QString txt = this->document()->toPlainText();
+    this->document()->clear();
+    this->document()->setPlainText(txt);
+}
+
+void EditorKernel::wheelEvent(QWheelEvent *event)
+{
+    if (Qt::ControlModifier & event->modifiers()) {
+        if (event->delta() > 0)
+            zoomIn();
+        else
+            zoomOut();
+    } else
+        QTextBrowser::wheelEvent(event);
+}
+
+
+bool EditorKernel::gestureNative(QNativeGestureEvent * e) {
+
+   if (e->type() == QEvent::NativeGesture) {
+       if (e->value() < 0) {
+           zoomIn();
+       } else {
+          zoomOut();
+       }
+    }
+   SESSDEBUG() << "events-" << e->value();
+   e->accept();
+   return true;
 }

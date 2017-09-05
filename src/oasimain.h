@@ -68,7 +68,7 @@ public:
   ~OasiMain(void);
 
 signals:
-
+   void request_to_close();
 public slots:
   void appsOpen(QString file);
   bool load(const QString &f);
@@ -104,7 +104,8 @@ public slots:
   void setTextStatus2( const QString txt );
   void setTextMsg( const QString txt );
   void TextOnlyTray(const QString txt);
-
+  //// voice read block by block
+  void runReadBlocks();
 
 
 
@@ -112,11 +113,12 @@ protected:
   QSystemTrayIcon *traytop;
   void drawall();
   void setupTextActions();
+  void closeEvent (QCloseEvent *event);
 
   QAction *actionSave, *actionTextBold, *actionTextUnderline, *actionTextItalic,
       *actionTextColor, *actionAlignLeft, *actionAlignCenter, *actionAlignRight,
       *actionAlignJustify, *actionUndo, *actionRedo, *actionCut, *actionCopy,
-      *actionPaste;
+      *actionPaste, *actionVoiceBlocks;
 
   QStatusBar *statusbar;
   QFontComboBox *comboFont;
@@ -124,10 +126,13 @@ protected:
   QLabel *statustxt2, *statustxt;
 
   QToolBar *tb;
+  QFileInfo currentin;
   QString fileName;
   EditorKernel *base_edit;
   QGridLayout *gridLayout;
   bool enableedit;
+  int currdocsize;
+  int firstdocsize;
 };
 
 #endif // OASIMAIN_H
