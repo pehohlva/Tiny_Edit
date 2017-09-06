@@ -3,29 +3,9 @@
 ######################################################################
 !include( ../config.pri ) {
 message( "../config.pri not found" )
+## here inlude lib rtf odt epub format documents
 }
 
-qtHaveModule(core) {
-!include(docformat/odt.pri ) {
-DEFINES += _ODTREADON_
-message( "docformat/odt.pri not found" )
-  }
-message( "  odt load ok" )
-} else {
-DEFINES += _ODTREADOUT_
-message( "  odt not load " )
-}
-
-qtHaveModule(core) {
-!include(docformat/rtfsrc.pri ) {
-DEFINES += _RTFWORK_
-message( "docformat/rtfsrc.pri not found" )
-}
-message( "  rtf  load " )
-} else {
-DEFINES += _RTFREADOUT_
-message( "  rtf not load " )
-}
 
 
 qtHaveModule(svg) {
@@ -37,12 +17,13 @@ message( "svg module disable ... for images svg" )
 }
 
 
-QT += concurrent pdfium
+qtHaveModule(pdfium) {
+QT += pdfium
+message( "load pdfium module... for pdt text extract" )
+} else {
+DEFINES += _NO_PDFIUM_MODULE_
+message( "pdfium module disable not found... " )
 
-## qmake -spec macx-xcode OasiEdit.pro
-qtHaveModule(afjagfjgajfggui) {
-message( "Check if poppler qt5 exist... !oh is not cmake here .." )
-message( "If you have installed lib libpoppler-qt5 edit file vi $$PWD/src.pro head " )
 POPPLERDIR = /usr/local/include/poppler/qt5
 ##### libpoppler-qt5.1.3.0.dylib
 ##### /usr/local/lib/libpoppler-qt5.1.3.0.dylib
@@ -50,10 +31,13 @@ DEPENDPATH +=  $$POPPLERDIRs
 INCLUDEPATH += $$POPPLERDIR
 LIBS +=/usr/local/lib/libpoppler-qt5.1.3.0.dylib
 DEFINES += _QT5POPPLEROK_
+message( " Load local poppler static lib /POPPLERPDFQT4 load static" )
 }
 
+QT += concurrent
 
-qtHaveModule(core) {
+
+qtHaveModule(ssssssssscore) {
 #############module xxdebug?###############release!##########################################
 TEMPLATE = app
 TARGET = OasisEdit
@@ -72,10 +56,6 @@ CONFIG +=debug_release warn_on console
 DEPENDPATH += .
 INCLUDEPATH += .
 
-LIBS += -lz
-INCLUDEPATH += $$[QT_INSTALL_PREFIX]/src/3rdparty/zlib
-
-
 # Input
 HEADERS += imageedit.h \
     oasimain.h \
@@ -84,7 +64,9 @@ HEADERS += imageedit.h \
     ui_forms.h \
     doc_session.h \
     oasi_application.h \
-    editvoiceblock.h
+    editvoiceblock.h \
+    voiceprocesing.h \
+    worker.h
 
 SOURCES += main.cpp \
     imageedit.cpp \
@@ -93,16 +75,19 @@ SOURCES += main.cpp \
     editortable_setting.cpp \
     doc_session.cpp \
     oasi_application.cpp \
-    editvoiceblock.cpp
+    editvoiceblock.cpp \
+    voiceprocesing.cpp \
+    worker.cpp
 
 
 
 #### install lib from https://github.com/pehohlva/QCLD2
-#### to deactivate write xxxx55core module not exist
+#### to deactivate write xxxx55core module not exist also function but your build app
 qtHaveModule(core) {
 INCLUDEPATH += /usr/local/include
 DEPENDPATH += /usr/local/include
 LIBS +=/usr/local/lib/libqcld2.a
+DEFINES += _QCLD2YES_
 message( "  QCLD2 load " )
 } else {
 DEFINES += _QCLD2NO_
@@ -121,6 +106,7 @@ DISTFILES += \
     Copysheet.txt \
     copy_session \
     copy_block.txt
+
 
 
 

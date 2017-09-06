@@ -16,8 +16,10 @@
  */
 #include "doc_session.h"
 
-#include "docformat/kzip.h"
+#include "zipdoc.h"  /// simple..
+#include "kzip.h" ///  best?
 #include "editorkernel.h"
+#include "core_htmldriver.h"
 #include "oasimain.h"
 #include <QComboBox>
 #include <QLabel>
@@ -59,7 +61,10 @@ DOC::DOC(QObject *parent) : QObject(parent) {
 
 #include <QMimeDatabase>
 #include <QMimeType>
+
+#ifndef _NO_PDFIUM_MODULE_
 #include <QtPdfium/QPdfium>
+#endif
 
 #define IPNG QString("png")
 #define IJPG QString("jpg")
@@ -137,7 +142,7 @@ QString DOC::GetHtml(const QString file) {
 
   if (EXT == IRTFD || EXT == IDOCX || EXT == IDOC ||
       EXT == QString("webarchive")) {
-    run_textutils(file); /// go to html
+     run_textutils(file); /// go to html
     if (d->toHtml().size() > 33) {
       return QString(); /// pass doc fill..
     } else {
@@ -145,9 +150,8 @@ QString DOC::GetHtml(const QString file) {
       return main;
     }
   } else if (MIMENAME == MODTM) {
-    qDebug() << "load odt session section...";
+    //// qDebug() << "load odt session section...";
     QString html;
-#ifndef _ODTREADOUT_
     OOO::Converter *odt =
         new OOO::Converter(); // .odt odf or so...  OpenDocument Format.
     odt->convert(file, html);
@@ -158,7 +162,6 @@ QString DOC::GetHtml(const QString file) {
     } else {
       d->setHtml(html);
     }
-#endif
     if (d->toHtml().size() < 33) {
       main = QString("Unable to handle your odt file:%1").arg(file);
       return main;
@@ -166,8 +169,7 @@ QString DOC::GetHtml(const QString file) {
       return QString(); /// pass doc fill..
     }
   } else if (EXT == IRTF) {
-    qDebug() << "load rtf section...";
-#ifndef _RTFREADOUT_
+   ////  qDebug() << "load rtf section...";
     RtfReader::Reader *reader = new RtfReader::Reader();
     bool result = reader->open(f);
     if (!result) {
@@ -180,7 +182,6 @@ QString DOC::GetHtml(const QString file) {
       action = 1;
       main.clear();
     }
-#endif
     /// textutilgo....
     main.clear();
     if (d->toHtml().size() > 22) {
@@ -215,7 +216,7 @@ QString DOC::GetHtml(const QString file) {
       return QString();
     }
   } else {
-
+    //// QMap<QString,QByteArray> liting = unzipstream(f);
     KZipStream *Kzip = new KZipStream(f);
     if (Kzip->canread()) {
       const QStringList entries = Kzip->filelist();
@@ -229,6 +230,7 @@ QString DOC::GetHtml(const QString file) {
     }
 
     if (MIMENAME.contains(QString("/pdf"))) {
+#ifndef _NO_PDFIUM_MODULE_
       QPdfium pdf(f);
       QString grep;
       const int sumpage = pdf.pageCount();
@@ -241,6 +243,11 @@ QString DOC::GetHtml(const QString file) {
       }
       d->setPlainText(grep);
       return main;
+#endif
+/*   try popplerqt5 here  */
+
+
+
     }
 
     QFile file(f);

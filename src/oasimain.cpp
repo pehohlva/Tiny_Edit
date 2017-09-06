@@ -25,13 +25,7 @@
 #include <QSettings>
 #include <QToolBar>
 
-#ifndef _ODTREADOUT_
-#include <OdtFormat>
-#endif
-
-#ifndef _RTFREADOUT_
-#include <RTFFormat>
-#endif
+#include "voiceprocesing.h"
 
 #include "doc_session.h"
 #include "editorkernel.h"
@@ -39,6 +33,8 @@
 #ifdef _HAVINGNESONSPEECH_
 #include "editvoiceblock.h" /// read block by block text
 #include <QTextToSpeech>
+#else
+#include "editvoiceblock.h"
 #endif
 
 #define __TMPCACHE__ QString("%1/.fastcache/").arg(QDir::homePath())
@@ -82,12 +78,17 @@ bool OasiMain::load(const QString &f) {
   int firstdocsize; */
 }
 
-OasiMain::OasiMain(QWidget *parent) : QMainWindow(parent) {
+OasiMain::OasiMain(QWidget *parent) : QMainWindow(parent)  {
   this->setContentsMargins(5, 0, 5, 0);
+  vrspeak = new VoiceBlock(this);
   enableedit = false;
   setWindowIcon(QIcon(":/images/ODTicon.png"));
   setStyleSheet(xtyle);
   drawall();
+  connect(vrspeak, SIGNAL(setDumpMessage(QString)), this,
+          SLOT(TextOnlyTray(QString)));
+  connect(combovoice, SIGNAL(activated(int)), this, SLOT(setVoiceat(int)));
+
   actionStopVoice->setDisabled(true);
   actionVoiceBlocks->setDisabled(false);
   base_edit->document()->setUndoRedoEnabled(false);
@@ -106,10 +107,6 @@ OasiMain::OasiMain(QWidget *parent) : QMainWindow(parent) {
           SLOT(setTextStatus2(QString)));
   connect(DOC::self(this), SIGNAL(setPriorMessage(QString)), this,
           SLOT(TextOnlyTray(QString)));
-
-  connect(vrspeak, SIGNAL(setDumpMessage(QString)), this,
-          SLOT(TextOnlyTray(QString)));
-  connect(combovoice, SIGNAL(activated(int)), this, SLOT(setVoiceat(int)));
 
   fontChanged(base_edit->font());
   colorChanged(base_edit->textColor());
@@ -364,7 +361,6 @@ void OasiMain::setupTextActions() {
   combovoice = new QComboBox(tb);
   tb->addWidget(combovoice);
   combovoice->setToolTip(QString("Voice and Speaker"));
-  vrspeak = new VoiceBlock(this);
   vrspeak->FillvaiableVoice();
   QList<Voice> vitem = vrspeak->avaiableVoices();
   QList<Voice>::const_iterator x;
@@ -552,11 +548,8 @@ void OasiMain::closeEvent(QCloseEvent *event) {
 
 /////
 void OasiMain::fileOpen() {
-  QString lastdir_(DOC::self(this)->value("LastDir").toString());
-
-  QString fn = QFileDialog::getOpenFileName(this, tr("Open File..."));
-  ///// dialog.setWindowFlags(Qt::Sheet);
-
+    QString ldd = DOC::self(this)->value("LastDir").toString();
+  QString fn = QFileDialog::getOpenFileName(this, tr("Open File..."),ldd);
   if (!fn.isEmpty()) {
     QFileInfo fi(fn);
     DOC::self(this)->setValue("LastDir", fi.absolutePath() + "/");
@@ -858,15 +851,13 @@ void OasiMain::TextOnlyTray(const QString txt) {
   if (!traytop->isVisible()) {
     traytop->setVisible(true);
   }
-  traytop->showMessage(QString("Document Msg."), txt,
-                       QSystemTrayIcon::Information, (5 * 1000));
+  traytop->showMessage(QString("Document Msg."), txt,QSystemTrayIcon::Information, (5 * 1000));
 }
 
 /*  start to speak */
 void OasiMain::runReadBlocks() {
   connect(vrspeak, SIGNAL(endreadPage()), this, SLOT(stopReadBlocks()));
-  connect(vrspeak, SIGNAL(setVoicePriorMessage(QString)), this,
-          SLOT(TextOnlyTray(QString)));
+  connect(vrspeak, SIGNAL(setVoicePriorMessage(QString)), this,SLOT(TextOnlyTray(QString)));
   if (!actionStopVoice->isEnabled()) {
     actionStopVoice->setDisabled(false);
   }
@@ -876,17 +867,14 @@ void OasiMain::runReadBlocks() {
 
 /*   *actionVoiceBlocks, actionStopVoice; */
 void OasiMain::stopReadBlocks() {
-
   bool run = false;
-
   if (actionStopVoice->isEnabled()) {
     run = true;
   }
   SESSDEBUG() << __FUNCTION__ << "### wake " << run;
   actionStopVoice->setDisabled(true);
   actionVoiceBlocks->setDisabled(false);
-
   if (run) {
-    vrspeak->stopfast();
+    vrspeak->stopfast(); /// cursor text stop & voice
   }
 }

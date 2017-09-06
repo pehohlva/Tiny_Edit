@@ -54,6 +54,15 @@ void Interface::MakePrintScreen() {
   }
 }
 
+/*
+QDialog
+
+  setWindowFlags(Qt::Sheet);
+  setWindowModality(Qt::ApplicationModal);
+  setWindowTitle(tr("testggg"));
+
+*/
+
 Interface::Interface(QWidget *parent) : QDialog(parent) {
   setWindowFlags(Qt::Sheet);
   setWindowModality(Qt::ApplicationModal);

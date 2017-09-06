@@ -22,6 +22,9 @@
     in 2008 - 2013 adapted from QT4.8 to QT5.9
 */
 #include "editvoiceblock.h"
+#include <QProgressDialog>
+#include "core_htmldriver.h"
+#include "voiceprocesing.h"
 
 /*  make numeric a QString summ from unicode used plus year code..
  its faster to find in html code e pages.. */
@@ -40,76 +43,95 @@ static inline int genkeyname(const QString name) {
   return base;
 }
 
-static inline void say_comand_fly(const QStringList comandlist) {
-  QString tmp = QString("say %1").arg(comandlist.join(" "));
-  SESSDEBUG() << __FUNCTION__ << " exec -  " << tmp;
-  QString lstr;
-  QString cmd = QString("say");
-  QProcess *process = new QProcess();
-  process->setReadChannelMode(QProcess::MergedChannels);
-  process->start(cmd, comandlist, QIODevice::ReadOnly);
-  if (!process->waitForFinished()) {
-    /////
-  } else {
-    lstr = QString(process->readAll().constData());
-    SESSDEBUG() << __FUNCTION__ << " out -> exec -  " << lstr;
-  }
+#include <QObject>
+
+
+
+ToWorker::ToWorker(QObject *parent) : QObject(parent) { }
+
+void ToWorker::run(const QStringList cmd ) {
+    process = new QProcess();
+    QString tmp = QString("say %1").arg(cmd.join(" "));
+    SESSDEBUG() << __FUNCTION__ << " exec -  " << tmp;
+    process->setReadChannelMode(QProcess::MergedChannels);
+     connect(process, SIGNAL(finished(int)), this, SLOT(ready(int)));
+     process->start("say",cmd, QIODevice::ReadOnly);
+}
+
+void ToWorker::stop() {
+   process->kill();
+}
+
+void ToWorker::ready(int id ) {
+   SESSDEBUG() << __FUNCTION__ << " WORKER TELL MEE ready-  " << id;
+   emit targetVoiceReady(id);
 }
 
 static const int speedchaine = 1500;
 
-VoiceBlock::VoiceBlock(QObject *parent) : QObject(parent) { now = pause; }
+VoiceBlock::VoiceBlock(QObject *parent) : QObject(parent) {
+    now = pause;
+    voicejob = new ToWorker(this);
+    connect(voicejob, SIGNAL(targetVoiceReady(int)), this, SLOT(speechEnd(int)));
+}
 
-/*     QProgressDialog dialog;
-    dialog.setLabelText(QString("Progressing using %1
- thread(s)...").arg(QThread::idealThreadCount()));
 
-    // Create a QFutureWatcher and connect signals and slots.
-    QFutureWatcher<void> futureWatcher;
-    QObject::connect(&futureWatcher, SIGNAL(finished()), &dialog,
- SLOT(reset())); QObject::connect(&dialog, SIGNAL(canceled()), &futureWatcher,
- SLOT(cancel())); QObject::connect(&futureWatcher,
- SIGNAL(progressRangeChanged(int,int)), &dialog, SLOT(setRange(int,int)));
-    QObject::connect(&futureWatcher, SIGNAL(progressValueChanged(int)), &dialog,
- SLOT(setValue(int)));
 
- // Start the computation.
-    futureWatcher.setFuture(QtConcurrent::map(vector, spin));
 
-    // Display the dialog and start the event loop.
-    dialog.exec();
+void VoiceBlock::killVoice() {
+         now = pause;
+         stateB=0;
+         if (!voicejob) {
+            voicejob = new ToWorker(this);
+         } else {
+            voicejob->deleteLater();
+            voicejob = new ToWorker(this);
+         }
+         connect(voicejob, SIGNAL(targetVoiceReady(int)), this, SLOT(speechEnd(int)));
+         voicejob->stop();
+}
 
-    futureWatcher.waitForFinished();
-
-    // Query the future to check if was canceled.
-    qDebug() << "Canceled?" << futureWatcher.future().isCanceled(); */
-void VoiceBlock::say(const QString text) {
-  QFile f(CACHESPEECHFILE);
+void VoiceBlock::say(const QString text , Vstate e ) {
+    if (now == speeach && e !=internuse ) {
+        return;
+    }
+  if (e == internuse && stateB ==0) {
+      stateB =1;
+  }
+  SESSDEBUG() << __FUNCTION__ << " - txt to read size->" << text.size();
+  now = speeach;
+  QString filetextnow = CACHESPEECHFILE;
+  if (stateB > 0) {
+     filetextnow =    CACHEBUFFERDISKTMP + QString("/readblock_%1.dat").arg(stateB);
+  }
+  unlink(filetextnow);
+  QFile f(filetextnow);
+  const int tc = text.size();
   bool password = false;
   if (f.open(QFile::Truncate | QFile::Text | QFile::ReadWrite)) {
     QTextStream sw(&f);
     sw.setCodec(QTextCodec::codecForName("UTF-8"));
     sw << text;
     f.close();
-    if (f.bytesAvailable() > 0) {
+    const qint64 bytetext = f.bytesAvailable();
+    if (bytetext > 0) {
+       SESSDEBUG() << __FUNCTION__ << " XXXXXXXXXX - txt to read size->" << bytetext;
       password = true;
     }
   }
-  if (password) {
+  if ( password && currentVoice.IDVoice > 0 ) {
     QStringList cmd;
     cmd << QString("-f");
-    cmd << CACHESPEECHFILE;
+    cmd << filetextnow;
     cmd << QString("-v");
     cmd << currentVoice.voicename;
-    cmd << QString("--quality=125");
-    //// SESSDEBUG() << __FUNCTION__ << " - " << cmd;
-    QFuture<void> f2 = QtConcurrent::run(say_comand_fly, cmd);
-    ///// f2.waitForFinished();
-    emit setDumpMessage(
-        QString("Read from Voice %1").arg(currentVoice.voicename));
+    ///// cmd << QString("--quality=125");
+    SESSDEBUG() << __FUNCTION__ << " - launch voice ->" << cmd << "-" << currentVoice.debug();
+    voicejob->run(cmd);
   } else {
-    emit setDumpMessage(
-        QString("Unable to write inside Cache dir... disk is full?"));
+    stopfast();
+    SESSDEBUG() << __FUNCTION__ << " - STOP XXXXXXXX -" << currentVoice.debug();
+    emit setVoicePriorMessage(QString("Unable to write inside Cache dir... disk is full?"));
   }
 }
 
@@ -119,7 +141,7 @@ void VoiceBlock::sayDemoVoice() {
   if (!person.voicename.isEmpty()) {
     currentVoice = person;
     QString text = person.demotext.replace(QString("#"), QString());
-    say(text);
+    say(text,outside);
     SESSDEBUG() << __FUNCTION__ << " - " << person.debug();
   } else {
     SESSDEBUG() << __FUNCTION__ << " - Assert null person!!!!!!XXXXXXXXXX";
@@ -169,8 +191,8 @@ void VoiceBlock::FillvaiableVoice() {
       one.demotext = comment;
       if (!name.isEmpty()) {
         voices.append(one);
+        SESSDEBUG() << __FUNCTION__ << " refill " << one.debug();
       }
-      //// SESSDEBUG() << one.debug();
     }
   }
 }
@@ -236,6 +258,7 @@ void VoiceBlock::sendursorTo(const int blocknr) {
   }
 }
 
+/*
 void VoiceBlock::say() {
   if (now == speeach) {
     SESSDEBUG() << __FUNCTION__ << " - on speeach- ";
@@ -244,7 +267,7 @@ void VoiceBlock::say() {
     SESSDEBUG() << __FUNCTION__ << " - on pause or stop - ";
   }
 }
-
+ */
 void VoiceBlock::stopfast() {
   if (now != stop) {
     now = stop;
@@ -252,9 +275,9 @@ void VoiceBlock::stopfast() {
     for (int x = 0; x < summtotblock; x++) {
       formatBlok(x, false); //// clean my format if have..
     }
-    sendursorTo(0);
-    emit endreadPage();
-    emit setDumpMessage(QString("Stop Read Document.."));
+     sendursorTo(0);
+     killVoice(); /// voice stop
+     emit setVoicePriorMessage(QString("Stop Read Document.."));
   }
 }
 
@@ -263,7 +286,10 @@ void VoiceBlock::next() {
     return;
   }
   summtotblock = edit->document()->blockCount();
+  if (stateB !=1) {
   stateB++;
+  }
+  SESSDEBUG() << __FUNCTION__ << " - pos -> " << stateB;
   SESSDEBUG() << stateB << " - call next - " << now;
   if (stateB < summtotblock) {
     jump_and_Speeach(stateB);
@@ -277,8 +303,18 @@ void VoiceBlock::next() {
   }
 }
 
-void VoiceBlock::jump_and_Speeach(int blocknr) {
+void VoiceBlock::speechEnd( int sig ) {
+    SESSDEBUG() << __FUNCTION__ << " ready-  " << sig << ":state" << stateB;
+    now = pause;
+     ///// if read paragraph continue line
+     if ( stateB != 0) {
+         now = speeach;
+         next();
+     }
+}
 
+void VoiceBlock::jump_and_Speeach(int blocknr) {
+   SESSDEBUG() << __FUNCTION__ << " - pos -> " << blocknr;
   /*
   if (speechDoc->state() == QTextToSpeech::Speaking) {
       speechDoc->stop();
@@ -287,31 +323,31 @@ void VoiceBlock::jump_and_Speeach(int blocknr) {
   if (now != speeach) {
     return;
   }
-
   QTextBlock dd = edit->document()->findBlockByNumber(blocknr);
+  SESSDEBUG() << __FUNCTION__ << ":" << __LINE__ <<  " " << blocknr << dd.isValid();
+
   if (dd.isValid()) {
     const QString txt = dd.text();
     QString pobs = txt.trimmed();
-    if (pobs.size() > 0) {
-      formatBlok(blocknr, true);
-      SESSDEBUG() << blocknr << " - pos - " << txt;
-    } else {
-      formatBlok(blocknr, false);
-      SESSDEBUG() << blocknr << " NULLTXT!!!!!!!";
-    }
+            if (pobs.size() > 0) {
+              formatBlok(blocknr, true);
+              ////SESSDEBUG() << blocknr << " - pos - " << txt;
+            } else {
+              formatBlok(blocknr, false);
+            }
     formatBlok(blocknr - 1, false);
     //// send cursor next block...to view text ok...
     QTextCursor bcu(dd);
     sendursorTo(blocknr + 1);
-
-    if (txt.isEmpty()) {
-      next();
-      return;
-    } else {
-      say();
-      return;
-    }
-    //// speechDoc->say(txt);
+            if (txt.isEmpty()) {
+              SESSDEBUG() << __FUNCTION__ << ":" << __LINE__ <<  " " << blocknr << " go next";
+              next();
+              return;
+            } else {
+              SESSDEBUG() << __FUNCTION__ << ":" << __LINE__ << now <<  txt.size() << " " << blocknr << " go say";
+              say(txt,internuse);
+              return;
+            }
   }
   SESSDEBUG() << __FUNCTION__ << " - call - novalid block" << blocknr;
 }
@@ -335,11 +371,6 @@ void VoiceBlock::init_on(QTextEdit *e) {
   summtotblock = edit->document()->blockCount();
   const QString engine = QString("default");
   QTextCursor ecu = edit->textCursor();
-  connect(this, SIGNAL(speeachvoice(int)), this, SLOT(jump_and_Speeach(int)));
-  //// speechDoc = new QTextToSpeech();
-  ////const QString handleer = (SetLanguage(gg))? QString("speeach_found") :
-  ///QString("Sorry language not found");  if (handleer.size() < 12) {
   now = speeach;
   jump_and_Speeach(0);
-  ///}
 }

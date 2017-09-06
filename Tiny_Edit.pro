@@ -3,4 +3,4 @@ message( "config.pri not found" )
 }
 TEMPLATE    =   subdirs
 
-SUBDIRS   =   src
+SUBDIRS   =   src_lib src

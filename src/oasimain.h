@@ -156,9 +156,7 @@ protected:
   bool enableedit;
   int currdocsize;
   int firstdocsize;
-#ifdef Q_OS_MAC
   VoiceBlock *vrspeak;
-#endif
 };
 
 #endif // OASIMAIN_H

@@ -3,7 +3,11 @@ DEFINES += _QT5RUNNING_
 message(Hi ... Hello we build now or not... on QT5 -Author)
 message(We use QT from: $$[QT_INSTALL_PREFIX])
 }
+########
 
+LIBS +=$$PWD/liboasidoc.a
+INCLUDEPATH += $$PWD/src_lib/docformat/rtf-qt $$PWD/src_lib/docformat $$PWD//src_lib/docformat/ooo $$PWD/src_lib/docformat/epub
+DEPENDPATH += $$PWD/src_lib/docformat/rtf-qt $$PWD/src_lib/docformat $$PWD//src_lib/docformat/ooo $$PWD/src_lib/docformat/epub
 
 MOC_DIR = o
 RCC_DIR = o
@@ -50,7 +54,8 @@ QT += concurrent
 message("Oh you have intall concurrent, confirm/bundle.")
 }
 
-qtHaveModule(texttospeech) {
+### better quality on mac shell say  (man say) in osx console
+qtHaveModule(nooootexttospeech) {
 DEFINES += _HAVINGNESONSPEECH_
 QT += texttospeech
 message("Oh you have intall texttospeech, ok we use it..lol.. confirm/bundle ")

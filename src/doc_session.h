@@ -22,6 +22,10 @@
 #include <QSettings>
 #include <QTextDocument>
 #include <QWidget>
+#include <QProcess>
+#include <QObject>
+
+
 
 #define _BASICORG_ QString("QTClub")
 #define _BASICDOMAINE_ QString("org.freeroad.ch")
