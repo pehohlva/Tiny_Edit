@@ -1,3 +1,26 @@
+/*
+    Copyright (C)  2017 Piter K. <pehohlva@gmail.com>
+
+    This library is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 2.1 of the License, or
+    (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    History This file was a part from my own projects
+    https://sourceforge.net/projects/wysiwyg-edit/
+    https://code.google.com/archive/p/fop-miniscribus/
+    old Link https://de.wikipedia.org/wiki/Extensible_Stylesheet_Language_%E2%80%93_Formatting_Objects
+    XSL-FO Wysiwyg MiniScribus / XHTML Qeditor
+    in 2008 - 2013 adapted from QT4.8 to QT5.9
+*/
 #include "editortable_setting.h"
 #include "ui_forms.h"
 #include <QCloseEvent>
@@ -12,8 +35,8 @@ Table_Setting *Table_Setting::self(QWidget *parent) {
 //
 Table_Setting::Table_Setting(QWidget *parent) : QDialog(parent) {
   setupUi(this);
+  setWindowFlags(Qt::Sheet);
 }
-//
 
 void Table_Setting::SetFormat(QTextTable *existingtable) {
   /*  QTextTableFormat  */

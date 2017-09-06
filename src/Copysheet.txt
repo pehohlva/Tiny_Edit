@@ -1,4 +1,16 @@
 
+/*
+man say
+
+take voice cmd:
+say -v '?'
+say -o out22.aiff -v Federica "Buongiorno a tutti come state, avete iniziato bene la giornata?"
+
+
+*/
+
+
+
 void OasiMain::CursorMargins(qreal left, qreal right) {
   ///////// qDebug() << "### on_Umargin_Cursor_Move " << left << "," << right;
   qreal dist = right - left;

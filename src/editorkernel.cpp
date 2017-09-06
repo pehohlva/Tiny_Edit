@@ -1,20 +1,35 @@
+/*
+    Copyright (C)  2017 Piter K. <pehohlva@gmail.com>
+
+    This library is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 2.1 of the License, or
+    (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #include "editorkernel.h"
 #include "oasimain.h"
 #include <QImage>
 #include <QTextBrowser>
 #include <Qfile>
 
+#include "doc_session.h"
 #include "editortable_setting.h"
 #include "imageedit.h"
 #include "ui_forms.h"
-#include "doc_session.h"
-
 
 static const qreal TRACKPADSTEEPS = 0.013555555;
 static const qreal SLIDERMARGIN_TICK = 25.0;
 static const qreal SLIDERSPACER = 2.5;
 
-EditorKernel::EditorKernel() : QTextBrowser(),scaleFaktor(1.367) {
+EditorKernel::EditorKernel() : QTextBrowser(), scaleFaktor(1.367) {
   edit_yes = true;
   active_or_not = 10;
   modus_edit(edit_yes);
@@ -129,8 +144,8 @@ void EditorKernel::Image_mod_Setting() {
 void EditorKernel::contextMenuEvent(QContextMenuEvent *event) {
   QMenu *menu = this->createStandardContextMenu();
   menu->addAction(QIcon(QString::fromUtf8(":/images/mac/filenew.png")),
-             tr("Remove Format Font size all.."), this,
-             SLOT(removeFormat()));
+                  tr("Remove Format Font size all.."), this,
+                  SLOT(removeFormat()));
   menu->addSeparator();
 
   QPixmap pix(22, 22);
@@ -147,24 +162,24 @@ void EditorKernel::contextMenuEvent(QContextMenuEvent *event) {
   Eimage = nowimage.isValid();
   Etable = lastcursor.currentTable();
   isqtextblok = textblocc.isValid();
-  //// QAction *addAction(const QIcon &icon, const QString &text, const QObject *receiver, const char* member, const QKeySequence &shortcut = 0);
+  //// QAction *addAction(const QIcon &icon, const QString &text, const QObject
+  ///*receiver, const char* member, const QKeySequence &shortcut = 0);
 
   if (nowimage.isValid()) {
     QString picname = nowimage.name();
     QFileInfo locinfo(picname);
-    menu->addAction(QIcon(QString::fromUtf8(":/images/pictures.png")),
+    menu->addAction(
+        QIcon(QString::fromUtf8(":/images/pictures.png")),
         tr("Image edit \"%1\" width - height").arg(locinfo.fileName()), this,
         SLOT(Image_mod_Setting()));
   }
 
-    menu->addAction(QIcon(QString::fromUtf8(":/images/pictures.png")),
-      tr("Insert new image/images Multiselect"), this,
-      SLOT(CreateanewImage()));
-    menu->addAction(QIcon(QString::fromUtf8(":/images/pictures.png")),
-      tr("Grab Print Screen"), this,
-      SLOT(MakePrintScreen()),QKeySequence(tr("Ctrl+W")));
-
-
+  menu->addAction(QIcon(QString::fromUtf8(":/images/pictures.png")),
+                  tr("Insert new image/images Multiselect"), this,
+                  SLOT(CreateanewImage()));
+  menu->addAction(QIcon(QString::fromUtf8(":/images/pictures.png")),
+                  tr("Grab Print Screen"), this, SLOT(MakePrintScreen()),
+                  QKeySequence(tr("Ctrl+W")));
 
   tableContext = new QMenu(tr("Table Option"), this);
   tableContext->setIcon(QIcon(QString::fromUtf8(":/images/table.png")));
@@ -198,36 +213,35 @@ void EditorKernel::contextMenuEvent(QContextMenuEvent *event) {
   menu->popup(event->globalPos());
 }
 
-
 void EditorKernel::CreateanewImage() {
   QStringList pics = QFileDialog::getOpenFileNames(
-      this, tr("Choose Image"), QString(DOC::self(this)->value("LastDirImage").toString()),
+      this, tr("Choose Image"),
+      QString(DOC::self(this)->value("LastDirImage").toString()),
       tr("Image Files supported (*)"));
   if (pics.size() < 1) {
     return;
   }
-     bool oki = true;
-       for (int x = 0; x < pics.size(); x++) {
-           QFileInfo fox(pics.at(x));
-           QImage base;
-           base.load(fox.absoluteFilePath());
-           if (!base.isNull()) {
-                DOC::self(this)->setValue("LastDirImage",QVariant(fox.absolutePath()));
-                 insertImage(fox.absoluteFilePath());
-           } else {
-               oki = false;
-           }
-       }
-    if (!oki) {
-      QMessageBox::warning(
-          this, tr("Image Plugin"),
-          tr("Pleas install the plugin for this format.. or select other..\nOr "
-             "copy and paste image from your images application. \nTo convert on "
-             "web image. png jpg gif"));
-      return;
+  bool oki = true;
+  for (int x = 0; x < pics.size(); x++) {
+    QFileInfo fox(pics.at(x));
+    QImage base;
+    base.load(fox.absoluteFilePath());
+    if (!base.isNull()) {
+      DOC::self(this)->setValue("LastDirImage", QVariant(fox.absolutePath()));
+      insertImage(fox.absoluteFilePath());
+    } else {
+      oki = false;
     }
+  }
+  if (!oki) {
+    QMessageBox::warning(
+        this, tr("Image Plugin"),
+        tr("Pleas install the plugin for this format.. or select other..\nOr "
+           "copy and paste image from your images application. \nTo convert on "
+           "web image. png jpg gif"));
+    return;
+  }
 }
-
 
 void EditorKernel::SetColumLarge() {
   /* QTextTable  *nowtable; */
@@ -473,47 +487,43 @@ void EditorKernel::RepaintScreen() {
   switchEditModus(); /// reset to last modus..
 }
 
+bool EditorKernel::event(QEvent *e) {
+  if (e->type() == QEvent::NativeGesture) {
+    return gestureNative(static_cast<QNativeGestureEvent *>(e));
+  } else if (e->type() == QEvent::ContextMenu) {
+    contextMenuEvent(static_cast<QContextMenuEvent *>(e));
+    e->accept();
+  } else {
+    return QTextBrowser::event(e);
+  }
+}
 
-bool EditorKernel::event(QEvent * e) {
-    if (e->type() == QEvent::NativeGesture) {
-      return gestureNative(static_cast < QNativeGestureEvent * > (e));
-    } else if (e->type() == QEvent::ContextMenu) {
-      contextMenuEvent(static_cast < QContextMenuEvent * > (e));
-      e->accept();
-    }  else {
-       return QTextBrowser::event(e);
+void EditorKernel::removeFormat() {
+  const QString txt = this->document()->toPlainText();
+  this->document()->clear();
+  this->document()->setPlainText(txt);
+}
+
+void EditorKernel::wheelEvent(QWheelEvent *event) {
+  if (Qt::ControlModifier & event->modifiers()) {
+    if (event->delta() > 0)
+      zoomIn();
+    else
+      zoomOut();
+  } else
+    QTextBrowser::wheelEvent(event);
+}
+
+bool EditorKernel::gestureNative(QNativeGestureEvent *e) {
+
+  if (e->type() == QEvent::NativeGesture) {
+    if (e->value() < 0) {
+      zoomIn();
+    } else {
+      zoomOut();
     }
-}
-
-void EditorKernel::removeFormat()
-{
-    const QString txt = this->document()->toPlainText();
-    this->document()->clear();
-    this->document()->setPlainText(txt);
-}
-
-void EditorKernel::wheelEvent(QWheelEvent *event)
-{
-    if (Qt::ControlModifier & event->modifiers()) {
-        if (event->delta() > 0)
-            zoomIn();
-        else
-            zoomOut();
-    } else
-        QTextBrowser::wheelEvent(event);
-}
-
-
-bool EditorKernel::gestureNative(QNativeGestureEvent * e) {
-
-   if (e->type() == QEvent::NativeGesture) {
-       if (e->value() < 0) {
-           zoomIn();
-       } else {
-          zoomOut();
-       }
-    }
-   SESSDEBUG() << "events-" << e->value();
-   e->accept();
-   return true;
+  }
+  SESSDEBUG() << "events-" << e->value();
+  e->accept();
+  return true;
 }

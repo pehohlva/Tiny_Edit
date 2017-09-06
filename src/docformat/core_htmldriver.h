@@ -29,6 +29,9 @@ bool is_numeric(QString incomming);
 #define CACHEFILETMP\
                QString( "%1/index.html" ).arg(CACHEBUFFERDISKTMP)
 
+#define CACHESPEECHFILE\
+               QString( "%1/read.dat" ).arg(CACHEBUFFERDISKTMP)
+
 class HtmlDriver
 {
 public:

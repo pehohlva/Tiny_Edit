@@ -1,3 +1,19 @@
+/*
+    Copyright (C)  2017 Piter K. <pehohlva@gmail.com>
+
+    This library is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 2.1 of the License, or
+    (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #ifndef OASIMAIN_H
 #define OASIMAIN_H
 
@@ -27,6 +43,7 @@
 #include <QPointer>
 #include <QSettings>
 #include <QStatusBar>
+#include <QSystemTrayIcon>
 #include <QTextCodec>
 #include <QTextCursor>
 #include <QTextDocumentFragment>
@@ -37,8 +54,6 @@
 #include <QtDebug>
 #include <QtGui/QTextCharFormat>
 #include <QtGui>
-#include <QSystemTrayIcon>
-
 
 #ifdef _PRINTERIOK_
 #include <QPrinterInfo>
@@ -60,10 +75,9 @@
 #endif
 
 #ifdef _HAVINGNESONSPEECH_
-#include <QTextToSpeech>
 #include "editvoiceblock.h" /// compiler read block by block text
+#include <QTextToSpeech>
 #endif
-
 
 class VoiceBlock;
 class EditorKernel;
@@ -75,7 +89,7 @@ public:
   ~OasiMain(void);
 
 signals:
-   void request_to_close();
+  void request_to_close();
 public slots:
   void appsOpen(QString file);
   bool load(const QString &f);
@@ -100,6 +114,7 @@ public slots:
   void cursorPositionChanged();
   void clipboardDataChanged();
   void about();
+  void showFront();
   void printPreview(QPrinter *);
   void mergeFormatOnWordOrSelection(const QTextCharFormat &format);
   void fontChanged(const QFont &f);
@@ -108,20 +123,20 @@ public slots:
   void DocumentChanged();
 
   ////
-  void setTextStatus2( const QString txt );
-  void setTextMsg( const QString txt );
+  void setTextStatus2(const QString txt);
+  void setTextMsg(const QString txt);
   void TextOnlyTray(const QString txt);
   //// voice read block by block
   void runReadBlocks();
   void stopReadBlocks();
 
-
+  void setVoiceat(int voiceid);
 
 protected:
   QSystemTrayIcon *traytop;
   void drawall();
   void setupTextActions();
-  void closeEvent (QCloseEvent *event);
+  void closeEvent(QCloseEvent *event);
 
   QAction *actionSave, *actionTextBold, *actionTextUnderline, *actionTextItalic,
       *actionTextColor, *actionAlignLeft, *actionAlignCenter, *actionAlignRight,
@@ -130,7 +145,7 @@ protected:
 
   QStatusBar *statusbar;
   QFontComboBox *comboFont;
-  QComboBox *comboSize, *comboStyle;
+  QComboBox *comboSize, *comboStyle, *combovoice;
   QLabel *statustxt2, *statustxt;
 
   QToolBar *tb;
@@ -141,11 +156,9 @@ protected:
   bool enableedit;
   int currdocsize;
   int firstdocsize;
-#ifdef _HAVINGNESONSPEECH_
+#ifdef Q_OS_MAC
   VoiceBlock *vrspeak;
 #endif
-
-
 };
 
 #endif // OASIMAIN_H

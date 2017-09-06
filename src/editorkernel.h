@@ -1,25 +1,39 @@
+/*
+    Copyright (C)  2017 Piter K. <pehohlva@gmail.com>
+
+    This library is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 2.1 of the License, or
+    (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #ifndef EDITORKERNEL_H
 #define EDITORKERNEL_H
 
+#include "doc_session.h"
 #include "oasimain.h"
+#include "ui_forms.h"
 #include <QObject>
 #include <QTextBrowser>
-#include "ui_forms.h"
-#include "doc_session.h"
 
-#define TMPIMAGE QString( "%1/zz_oasi_tmp_image.png" ).arg(QDir::homePath())
-
-
+#define TMPIMAGE QString("%1/zz_oasi_tmp_image.png").arg(QDir::homePath())
 
 ///// QTextBrowser or QTextEdit ?? big question
 class EditorKernel : public QTextBrowser {
   Q_OBJECT
 public:
-     EditorKernel();
+  EditorKernel();
 signals:
   void DoubleClick_is_now();
   void IncommingHTML();
-  void TakeImage(QString);  /// remove image source
+  void TakeImage(QString); /// remove image source
 public slots:
   void RepaintScreen();
   void Image_mod_Setting();
@@ -40,7 +54,7 @@ public slots:
   void SetColumLarge();
 
   void switchEditModus();
-  void modus_edit( bool e );
+  void modus_edit(bool e);
 
   void CreateanewImage();
   void removeFormat();
@@ -68,8 +82,8 @@ protected:
   void mouseDoubleClickEvent(QMouseEvent *e);
   void contextMenuEvent(QContextMenuEvent *event);
   void insertFromMimeData(const QMimeData *source);
-  bool gestureNative(QNativeGestureEvent * e);
-  bool event(QEvent * e);
+  bool gestureNative(QNativeGestureEvent *e);
+  bool event(QEvent *e);
   qreal scaleFaktor;
   bool portrait_mode;
   qint64 lineTimer;

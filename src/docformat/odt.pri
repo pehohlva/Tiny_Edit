@@ -12,7 +12,7 @@ INCLUDEPATH += $$[QT_INSTALL_PREFIX]/src/3rdparty/zlib
 # Input
 HEADERS += docformat/kzip.h \
            docformat/QmyDom.h \
-		   docformat/core_htmldriver.h \
+           docformat/core_htmldriver.h \
            docformat/epub/econverter.h \
            docformat/epub/edocument.h \
            docformat/ooo/converter.h \
@@ -24,7 +24,7 @@ HEADERS += docformat/kzip.h \
     $$PWD/rtf-qt/doc_oasi_export.h
 SOURCES += docformat/kzip.cpp \
            docformat/QmyDom.cpp \
-		   docformat/core_htmldriver.h \
+           docformat/core_htmldriver.h \
            docformat/epub/econverter.cpp \
            docformat/epub/edocument.cpp \
            docformat/ooo/converter.cpp \

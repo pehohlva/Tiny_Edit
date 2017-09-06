@@ -1,4 +1,21 @@
 
+
+
+
+
+capire say...
+
+
+
+
+
+say -f rec.dat -v Anna  -o anna.aiff --quality=125
+
+
+
+
+
+
 #include "doc_session.h"
 
 #include "oasimain.h"

@@ -1,3 +1,19 @@
+/*
+    Copyright (C)  2017 Piter K. <pehohlva@gmail.com>
+
+    This library is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 2.1 of the License, or
+    (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #include "oasimain.h"
 
 #include <QComboBox>
@@ -9,11 +25,11 @@
 #include <QSettings>
 #include <QToolBar>
 
-#ifndef _ODTREADON_
+#ifndef _ODTREADOUT_
 #include <OdtFormat>
 #endif
 
-#ifndef _RTFREADON_
+#ifndef _RTFREADOUT_
 #include <RTFFormat>
 #endif
 
@@ -21,8 +37,8 @@
 #include "editorkernel.h"
 
 #ifdef _HAVINGNESONSPEECH_
-#include <QTextToSpeech>
 #include "editvoiceblock.h" /// read block by block text
+#include <QTextToSpeech>
 #endif
 
 #define __TMPCACHE__ QString("%1/.fastcache/").arg(QDir::homePath())
@@ -43,7 +59,7 @@ bool OasiMain::load(const QString &f) {
   currentin = QFileInfo(f);
   const QString html = DOC::self(this)->GetHtml(f);  //// no images
   QTextDocument *xdoc = DOC::self(this)->GetQdoc(f); //// images clone here
-  bool filldocobj = (xdoc->isEmpty())? false: true;
+  bool filldocobj = (xdoc->isEmpty()) ? false : true;
   if (html.isEmpty()) {
     base_edit->setDocument(xdoc);
     setCurrentFileName(f);
@@ -64,8 +80,6 @@ bool OasiMain::load(const QString &f) {
 
   /*  int currdocsize;
   int firstdocsize; */
-
-
 }
 
 OasiMain::OasiMain(QWidget *parent) : QMainWindow(parent) {
@@ -86,11 +100,16 @@ OasiMain::OasiMain(QWidget *parent) : QMainWindow(parent) {
           SLOT(cursorPositionChanged()));
 
   //// document session setPriorMessage
-  connect(DOC::self(this), SIGNAL(setMessage(QString)), this, SLOT(setTextMsg(QString)));
-  connect(DOC::self(this), SIGNAL(setMessageBase(QString)), this, SLOT(setTextStatus2(QString)));
-  connect(DOC::self(this), SIGNAL(setPriorMessage(QString)), this, SLOT(TextOnlyTray(QString)));
+  connect(DOC::self(this), SIGNAL(setMessage(QString)), this,
+          SLOT(setTextMsg(QString)));
+  connect(DOC::self(this), SIGNAL(setMessageBase(QString)), this,
+          SLOT(setTextStatus2(QString)));
+  connect(DOC::self(this), SIGNAL(setPriorMessage(QString)), this,
+          SLOT(TextOnlyTray(QString)));
 
-
+  connect(vrspeak, SIGNAL(setDumpMessage(QString)), this,
+          SLOT(TextOnlyTray(QString)));
+  connect(combovoice, SIGNAL(activated(int)), this, SLOT(setVoiceat(int)));
 
   fontChanged(base_edit->font());
   colorChanged(base_edit->textColor());
@@ -127,14 +146,12 @@ OasiMain::OasiMain(QWidget *parent) : QMainWindow(parent) {
   connect(base_edit, SIGNAL(copyAvailable(bool)), actionCopy,
           SLOT(setEnabled(bool)));
   setWindowTitle(_CVERSION_ + QString(" - %1").arg(_BASICTITLE_EDITOR_));
-  this->setIconSize(QSize(24,24));
+  this->setIconSize(QSize(24, 24));
   //// connect(QApplication::clipboard(), SIGNAL(dataChanged()), this,
   /// SLOT(clipboardDataChanged()));
   show();
 
-
   currentin = QFileInfo(_NONAMEFILE_);
-
 
   base_edit->document()->setUndoRedoEnabled(true);
   traytop->showMessage(_BASICTITLE_EDITOR_,
@@ -142,10 +159,14 @@ OasiMain::OasiMain(QWidget *parent) : QMainWindow(parent) {
                        QSystemTrayIcon::Warning, 15000);
 }
 
-
 OasiMain::~OasiMain(void) {
-   qDebug() << "Object is being deleted";
-   DOC::self(this)->save();
+  qDebug() << "Object is being deleted";
+  DOC::self(this)->save();
+}
+
+void OasiMain::showFront() {
+  this->raise();
+  this->showMaximized();
 }
 
 void OasiMain::drawall() {
@@ -161,7 +182,7 @@ void OasiMain::drawall() {
   traytop->setIcon(QIcon(perimage));
   traytop->setObjectName(tr("SystemTrayHandler"));
   QAction *maximizeAction = new QAction("Maximize Window", this);
-  connect(maximizeAction, &QAction::triggered, this, &OasiMain::showMaximized);
+  connect(maximizeAction, SIGNAL(triggered()), this, SLOT(showFront()));
 
   traytop->setVisible(true);
 
@@ -181,7 +202,6 @@ void OasiMain::drawall() {
   menu->addAction(a);
 
   menu->addSeparator();
-
   actionSave = a =
       new QAction(QIcon(rsrcPath + "/filesave.png"), tr("&Save"), this);
   a->setShortcut(QKeySequence::Save);
@@ -212,29 +232,7 @@ void OasiMain::drawall() {
   connect(a, SIGNAL(triggered()), this, SLOT(filePrintPdf()));
   tb->addAction(a);
   menu->addAction(a);
-
   menu->addSeparator();
-
-#ifdef _HAVINGNESONSPEECH_
-   //// voice_init  init_on
-   ////QToolBar *vtb = new QToolBar(this);
-  /////vtb->setMaximumHeight(toolbarhight);
-  ////vtb->setAllowedAreas(Qt::TopToolBarArea);
-  ////vtb->setWindowTitle(tr("Voice Action"));
-  ////addToolBarBreak(Qt::TopToolBarArea);
-  ////addToolBar(vtb);
-  actionVoiceBlocks = new QAction(QIcon(":/images/oo_icon.png"), tr("Voice Start Read."), this);
-  actionVoiceBlocks->setShortcut(Qt::CTRL + Qt::Key_M);
-  connect(actionVoiceBlocks, SIGNAL(triggered()), this, SLOT(runReadBlocks()));
-  tb->addAction(actionVoiceBlocks);
-  menu->addAction(actionVoiceBlocks);
-
-  actionStopVoice = new QAction(QIcon(":/images/oo_icon.png"), tr("Stop Voice Read."), this);
-  connect(actionStopVoice, SIGNAL(triggered()), this, SLOT(stopReadBlocks()));
-  tb->addAction(actionStopVoice);
-  menu->addAction(actionStopVoice);
-  menu->addSeparator();
-#endif
 
   menu->addAction(maximizeAction);
 
@@ -347,6 +345,44 @@ void OasiMain::setupTextActions() {
   tb->addAction(actionTextColor);
   menu->addAction(actionTextColor);
 
+#ifdef Q_OS_MAC
+  menu->addSeparator();
+  actionVoiceBlocks =
+      new QAction(QIcon(":/images/oo_icon.png"), tr("Voice Start Read."), this);
+  actionVoiceBlocks->setShortcut(Qt::CTRL + Qt::Key_M);
+  connect(actionVoiceBlocks, SIGNAL(triggered()), this, SLOT(runReadBlocks()));
+  tb->addAction(actionVoiceBlocks);
+  menu->addAction(actionVoiceBlocks);
+
+  actionStopVoice =
+      new QAction(QIcon(":/images/oo_icon.png"), tr("Stop Voice Read."), this);
+  connect(actionStopVoice, SIGNAL(triggered()), this, SLOT(stopReadBlocks()));
+  tb->addAction(actionStopVoice);
+  menu->addAction(actionStopVoice);
+  menu->addSeparator();
+
+  combovoice = new QComboBox(tb);
+  tb->addWidget(combovoice);
+  combovoice->setToolTip(QString("Voice and Speaker"));
+  vrspeak = new VoiceBlock(this);
+  vrspeak->FillvaiableVoice();
+  QList<Voice> vitem = vrspeak->avaiableVoices();
+  QList<Voice>::const_iterator x;
+  const int uservoice = DOC::self(this)->value("MyVoicePref").toInt();
+  for (x = vitem.constBegin(); x != vitem.constEnd(); ++x) {
+    Voice fox = *x;
+    QString name = QString("%1/%2 - %3")
+                       .arg(fox.voicename)
+                       .arg(fox.countryname)
+                       .arg(fox.language);
+    combovoice->addItem(name, QVariant(fox.IDVoice));
+    if (uservoice == fox.IDVoice) {
+      combovoice->setCurrentIndex(combovoice->count() - 1);
+    }
+  }
+
+#endif
+
   tb = new QToolBar(this);
   tb->setMaximumHeight(toolbarhight);
   tb->setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
@@ -442,6 +478,12 @@ bool OasiMain::maybeSave() {
   return true;
 }
 
+void OasiMain::setVoiceat(int voiceid) {
+  const int myvoice = combovoice->itemData(voiceid).toInt();
+  DOC::self(this)->setValue("MyVoicePref", QVariant(myvoice));
+  vrspeak->sayDemoVoice();
+}
+
 void OasiMain::setCurrentFileName(const QString &fileName) {
   this->fileName = fileName;
   base_edit->document()->setModified(false);
@@ -451,7 +493,8 @@ void OasiMain::setCurrentFileName(const QString &fileName) {
     shownName = _NONAMEFILE_;
   else
     shownName = currentin.fileName();
-  setWindowTitle(_CVERSION_ + QString(" - %1 - OASIS Open Document").arg(shownName));
+  setWindowTitle(_CVERSION_ +
+                 QString(" - %1 - OASIS Open Document").arg(shownName));
   setWindowModified(false);
   base_edit->modus_edit(true);
 }
@@ -467,18 +510,19 @@ void OasiMain::fileNew() {
 
 //// from main in drag to dock mac linux
 void OasiMain::appsOpen(QString file) {
-    currentin = QFileInfo(file);
-    QMimeDatabase mimeDatabase;
-    const QString MIMENAME = mimeDatabase.mimeTypeForFile(currentin.absoluteFilePath()).name();
-    QImage test;
-           test.load(currentin.absoluteFilePath());
-    if (MIMENAME.contains("image/") && !test.isNull()) {
-       base_edit->insertImage(currentin.absoluteFilePath());
-       return;
-    }
-    if (fileName.isEmpty()) {
-      fileSaveAs();
-    }
+  currentin = QFileInfo(file);
+  QMimeDatabase mimeDatabase;
+  const QString MIMENAME =
+      mimeDatabase.mimeTypeForFile(currentin.absoluteFilePath()).name();
+  QImage test;
+  test.load(currentin.absoluteFilePath());
+  if (MIMENAME.contains("image/") && !test.isNull()) {
+    base_edit->insertImage(currentin.absoluteFilePath());
+    return;
+  }
+  if (fileName.isEmpty()) {
+    fileSaveAs();
+  }
   if (!file.isEmpty()) {
     currentin = QFileInfo(file);
     DOC::self(this)->setValue("LastDir", currentin.absolutePath() + "/");
@@ -486,24 +530,33 @@ void OasiMain::appsOpen(QString file) {
   }
 }
 
-
-void OasiMain::closeEvent (QCloseEvent *event) {
-    event->ignore();
-    emit request_to_close();
+void OasiMain::closeEvent(QCloseEvent *event) {
+  event->ignore();
+  emit request_to_close();
 }
 
-
-void OasiMain::fileOpen() {
-  QString fn = QFileDialog::getOpenFileName(
-      this, tr("Open File..."), QString(DOC::self(this)->value("LastDir").toString()),
-      QString("Document .rtf .odt .doc .docx .html .txt (*)"));
-
-  ///// void QFileDialog::setHistory(const QStringList &paths)
-  QFileDialog dialog(this);
+/* QString fn = QFileDialog::getOpenFileName(
+      this, tr("Open File..."),
+  QString(DOC::self(this)->value("LastDir").toString()), QString("Document .rtf
+  .odt .doc .docx .html .txt (*)"));   ///// void QFileDialog::setHistory(const
+  QStringList &paths)
+  ///// QFileDialog dialog(this);
   ///// dialog.setAttribute(Qt::WidgetAttribute,true);  //// Qt::WidgetAttribute
   ////dialog.setMimeTypeFilters(FileFilterHaving());
   ////// dialog.exec();
-  ///
+  //   QFileDialog dialog(this);
+
+               dialog.setFileMode(QFileDialog::AnyFile);
+               dialog.setDirectory();
+               dialog.setViewMode(QFileDialog::Detail);/*/
+
+/////
+void OasiMain::fileOpen() {
+  QString lastdir_(DOC::self(this)->value("LastDir").toString());
+
+  QString fn = QFileDialog::getOpenFileName(this, tr("Open File..."));
+  ///// dialog.setWindowFlags(Qt::Sheet);
+
   if (!fn.isEmpty()) {
     QFileInfo fi(fn);
     DOC::self(this)->setValue("LastDir", fi.absolutePath() + "/");
@@ -512,7 +565,7 @@ void OasiMain::fileOpen() {
 }
 
 bool OasiMain::fileSave() {
-    //// const int docsizeNOW = base_edit->document()->toPlainText().size();
+  //// const int docsizeNOW = base_edit->document()->toPlainText().size();
 
   if (fileName.isEmpty())
     return fileSaveAs();
@@ -546,7 +599,8 @@ bool OasiMain::fileSaveAs() {
 #else
   support = tr("HTML-Files (*.htm *.html);;All Files (*)");
 #endif
-  QString fn = QFileDialog::getSaveFileName(this, tr("Save as..."), QString(), support);
+  QString fn =
+      QFileDialog::getSaveFileName(this, tr("Save as..."), QString(), support);
   if (fn.isEmpty())
     return false;
   setCurrentFileName(fn);
@@ -720,7 +774,7 @@ void OasiMain::cursorPositionChanged() {
 
 void OasiMain::clipboardDataChanged() {
   actionPaste->setEnabled(!QApplication::clipboard()->text().isEmpty());
- DocumentChanged();
+  DocumentChanged();
 }
 
 void OasiMain::DocumentChanged() {
@@ -735,13 +789,14 @@ void OasiMain::DocumentChanged() {
   /*  int currdocsize;
   int firstdocsize; */
   const QString txta = base_edit->document()->toPlainText();
-  DOC::self(this)->wakeUpContenent(txta,currentin);
+  DOC::self(this)->wakeUpContenent(txta, currentin);
 
-  currdocsize =txta.size();
-  SESSDEBUG() << "### wake " << __FUNCTION__  << currdocsize << firstdocsize;
+  currdocsize = txta.size();
+  SESSDEBUG() << "### wake " << __FUNCTION__ << currdocsize << firstdocsize;
   if (firstdocsize != currdocsize) {
-  actionSave->setEnabled(true);
-  ////// debug traytop->showMessage(QString("Document Msg."), QString("Save open..."), QSystemTrayIcon::Information, (5 * 1000));
+    actionSave->setEnabled(true);
+    ////// debug traytop->showMessage(QString("Document Msg."), QString("Save
+    ///open..."), QSystemTrayIcon::Information, (5 * 1000));
   } else {
     actionSave->setEnabled(false);
   }
@@ -787,8 +842,6 @@ void OasiMain::alignmentChanged(Qt::Alignment a) {
   }
 }
 
-
-
 /*   void setTextStatus2( const QString txt );
   void setTextMsg( const QString txt );
   void TextOnlyTray(const QString txt); */
@@ -805,36 +858,35 @@ void OasiMain::TextOnlyTray(const QString txt) {
   if (!traytop->isVisible()) {
     traytop->setVisible(true);
   }
-  traytop->showMessage(QString("Document Msg."), txt, QSystemTrayIcon::Information, (5 * 1000));
+  traytop->showMessage(QString("Document Msg."), txt,
+                       QSystemTrayIcon::Information, (5 * 1000));
 }
 
+/*  start to speak */
 void OasiMain::runReadBlocks() {
-
-     vrspeak = new VoiceBlock(this);
-     connect(vrspeak, SIGNAL(endreadPage()), this, SLOT(stopReadBlocks()));
-     connect(vrspeak, SIGNAL(setVoicePriorMessage(QString)), this, SLOT(TextOnlyTray(QString)));
-     if (!actionStopVoice->isEnabled())
-         actionStopVoice->setDisabled(false);
-
-     actionVoiceBlocks->setDisabled(true);
-     vrspeak->init_on(base_edit);
+  connect(vrspeak, SIGNAL(endreadPage()), this, SLOT(stopReadBlocks()));
+  connect(vrspeak, SIGNAL(setVoicePriorMessage(QString)), this,
+          SLOT(TextOnlyTray(QString)));
+  if (!actionStopVoice->isEnabled()) {
+    actionStopVoice->setDisabled(false);
+  }
+  actionVoiceBlocks->setDisabled(true);
+  vrspeak->init_on(base_edit);
 }
 
 /*   *actionVoiceBlocks, actionStopVoice; */
 void OasiMain::stopReadBlocks() {
 
-    bool run = false;
+  bool run = false;
 
-    if (actionStopVoice->isEnabled()) {
-        run = true;
+  if (actionStopVoice->isEnabled()) {
+    run = true;
+  }
+  SESSDEBUG() << __FUNCTION__ << "### wake " << run;
+  actionStopVoice->setDisabled(true);
+  actionVoiceBlocks->setDisabled(false);
 
-    }
-    SESSDEBUG() << __FUNCTION__ <<  "### wake " << run;
-    actionStopVoice->setDisabled(true);
-    actionVoiceBlocks->setDisabled(false);
-
-    if (run) {
+  if (run) {
     vrspeak->stopfast();
-    }
-
+  }
 }
