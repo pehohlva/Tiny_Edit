@@ -20,9 +20,6 @@
 #include "doc_session.h"
 #include "oasimain.h"
 #include <QObject>
-
-#include <QtConcurrent>
-
 #include "worker.h"
 
 
@@ -45,6 +42,7 @@ struct Voice {
 };
 
 class ToWorker;
+class VLoader;
 
 class VoiceBlock : public QObject {
   Q_OBJECT

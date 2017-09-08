@@ -9,9 +9,16 @@ LIBS +=$$PWD/liboasidoc.a
 INCLUDEPATH += $$PWD/src_lib/docformat/rtf-qt $$PWD/src_lib/docformat $$PWD//src_lib/docformat/ooo $$PWD/src_lib/docformat/epub
 DEPENDPATH += $$PWD/src_lib/docformat/rtf-qt $$PWD/src_lib/docformat $$PWD//src_lib/docformat/ooo $$PWD/src_lib/docformat/epub
 
-MOC_DIR = o
-RCC_DIR = o
-OBJECTS_DIR = o
+LIBS +=$$PWD/libqcld2.a
+INCLUDEPATH += $$PWD/qcld2 $$PWD/qcld2/cld2/public $$PWD/qcld2/cld2/internal
+DEPENDPATH += $$PWD/qcld2 $$PWD/qcld2/cld2/public $$PWD/qcld2/cld2/internal
+DEFINES += _QCLD2YES_
+
+
+
+MOC_DIR = build
+RCC_DIR = build
+OBJECTS_DIR = build
 
 equals(QT_VER_MAJ,4) {
 DEFINES += _QT4RUNNING_
@@ -49,22 +56,11 @@ QT += network
 message("Oh you have intall network, confirm/bundle.")
 }
 
-qtHaveModule(concurrent) {
-QT += concurrent
-message("Oh you have intall concurrent, confirm/bundle.")
-}
-
 ### better quality on mac shell say  (man say) in osx console
-qtHaveModule(nooootexttospeech) {
+qtHaveModule(texttospeech) {
 DEFINES += _HAVINGNESONSPEECH_
 QT += texttospeech
 message("Oh you have intall texttospeech, ok we use it..lol.. confirm/bundle ")
-}
-
-qtHaveModule(xxxxcl2) {
-INCLUDEPATH += /usr/local/include
-DEPENDPATH += /usr/local/include
-LIBS +=/usr/local/lib/libqcld2.a
 }
 
 

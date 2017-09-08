@@ -1,0 +1,12 @@
+
+
+
+
+check function inside lib
+nm  /usr/local/lib/libqcld2.a | less
+
+/usr/local/lib/libqcld2.a
+
+
+from brew
+nm /usr/local/lib/libcld.a | less

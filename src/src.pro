@@ -16,7 +16,6 @@ DEFINES += _NOSVGMODULE_
 message( "svg module disable ... for images svg" )
 }
 
-
 qtHaveModule(pdfium) {
 QT += pdfium
 message( "load pdfium module... for pdt text extract" )
@@ -24,30 +23,30 @@ message( "load pdfium module... for pdt text extract" )
 DEFINES += _NO_PDFIUM_MODULE_
 message( "pdfium module disable not found... " )
 
+
+qtHaveModule(notexitmodule) {
 POPPLERDIR = /usr/local/include/poppler/qt5
 ##### libpoppler-qt5.1.3.0.dylib
 ##### /usr/local/lib/libpoppler-qt5.1.3.0.dylib
-DEPENDPATH +=  $$POPPLERDIRs
+DEPENDPATH +=  $$POPPLERDIR
 INCLUDEPATH += $$POPPLERDIR
 LIBS +=/usr/local/lib/libpoppler-qt5.1.3.0.dylib
 DEFINES += _QT5POPPLEROK_
 message( " Load local poppler static lib /POPPLERPDFQT4 load static" )
 }
-
-QT += concurrent
-
+}
 
 qtHaveModule(core) {
 #############module xxdebug?###############release!##########################################
 TEMPLATE = app
-TARGET = OasisEdit
+TARGET = ../OasisEdit
 CONFIG +=release warn_off silence
 RC_FILE = images/ODTicon.icns
 QMAKE_INFO_PLIST = Info.plist
 } else {
 ############################debug!##########################################
 TEMPLATE = app
-TARGET = OasisEdit
+TARGET = sax
 CONFIG-=app_bundle
 CONFIG +=debug_release warn_on console
 }
@@ -79,33 +78,9 @@ SOURCES += main.cpp \
     voiceprocesing.cpp \
     worker.cpp
 
-
-
-#### install lib from https://github.com/pehohlva/QCLD2
-#### to deactivate write xxxx55core module not exist also function but your build app
-qtHaveModule(core) {
-INCLUDEPATH += /usr/local/include
-DEPENDPATH += /usr/local/include
-LIBS +=/usr/local/lib/libqcld2.a
-DEFINES += _QCLD2YES_
-message( "  QCLD2 load " )
-} else {
-DEFINES += _QCLD2NO_
-message( "  Deactivate lib QCLD2 language discovery offline. " )
-}
-
-
-
-
-###HEADERS += textedit.h core_application.cpp os_application.h core_application.h
-###SOURCES += textedit.cpp
-
 RESOURCES += textedit.qrc
 
-DISTFILES += \
-    Copysheet.txt \
-    copy_session \
-    copy_block.txt
+DISTFILES += copy_session
 
 
 
