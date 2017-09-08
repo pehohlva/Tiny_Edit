@@ -8,3 +8,6 @@ Tiny Edit - A QT5 based editor to read/hear RTF - OpenDocument Format
 ... and almost by mistake they listen to their documents.
 
 Documents are formatted in various ways, but nobody comes to mind make bold/italic/ mp3 or other Audio files Format.
+Download for Mac/Intel based Sierra or + Testing: https://raw.githubusercontent.com/pehohlva/Tiny_Edit/master/OasisEdit.dmg
+
+
