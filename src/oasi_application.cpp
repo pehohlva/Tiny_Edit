@@ -44,7 +44,7 @@ Oasi::Oasi(int &argc, char **argv) : QApplication(argc, argv) {
 #endif
   const QString current_dir = QDir::currentPath();
   DOC::self(this)->setDir(current_dir); //// document session
-  SESSDEBUG() << "### wake " << path;
+  //// SESSDEBUG() << "### wake " << path;
   /// file list in linux here
   QCoreApplication::setOrganizationName(_BASICORG_);
   QCoreApplication::setOrganizationDomain(_BASICDOMAINE_);
@@ -76,6 +76,9 @@ Oasi::Oasi(int &argc, char **argv) : QApplication(argc, argv) {
   }
 
   DOC::self(this)->installfont(true);
+  const int uservoice = DOC::self(this)->value("MyVoicePref").toInt();
+  qDebug() << "### init have voice " << uservoice;
+
 }
 
 void Oasi::prepare_to_close() {

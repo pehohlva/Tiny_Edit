@@ -37,7 +37,7 @@ message( " Load local poppler static lib /POPPLERPDFQT4 load static" )
 QT += concurrent
 
 
-qtHaveModule(ssssssssscore) {
+qtHaveModule(core) {
 #############module xxdebug?###############release!##########################################
 TEMPLATE = app
 TARGET = OasisEdit
@@ -47,7 +47,7 @@ QMAKE_INFO_PLIST = Info.plist
 } else {
 ############################debug!##########################################
 TEMPLATE = app
-TARGET = sax
+TARGET = OasisEdit
 CONFIG-=app_bundle
 CONFIG +=debug_release warn_on console
 }

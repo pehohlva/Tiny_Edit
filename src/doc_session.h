@@ -32,6 +32,8 @@
 #define _BASICTITLE_EDITOR_ QString("OasisEdit - Document Tiny Editor")
 #define _CVERSION_ QString("Vr. 1.2")
 #define _WORKDEFAULTFONT_ QString("Ubuntu-C")
+#define Q_WS_MAC  Q_OS_MAC
+
 
 // by error no image insert pix image transparent
 #define __ONEPIXELGIF__                                                        \
@@ -46,7 +48,7 @@
 
 #define _NONAMEFILE_ QString("Untitled.txt")
 
-#if 1 //// 1 or 0
+#if 0 //// 1 or 0
 #define SESSDEBUG qDebug
 #define STAGE 1
 #define _debuglogfile_                                                         \

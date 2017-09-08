@@ -286,7 +286,7 @@ void DOC::wakeUpContenent(QString plaintext, const QFileInfo file) {
   const QString MIMENAME =
       mimeDatabase.mimeTypeForFile(file.absoluteFilePath()).name();
   if (file.exists()) {
-    namef.prepend(file.fileName() + QString(" - "));
+    namef.prepend(file.fileName() + QString(" -%1 ").arg(idlanguage));
     namef.append(" ");
     namef.append(Bytes(file.size()));
   }
@@ -303,16 +303,16 @@ void DOC::wakeUpContenent(QString plaintext, const QFileInfo file) {
   if (file.exists()) {
     QString rec = DOC_INFONOW +
                   QString(" Word:%1/Char:%2").arg(totalwords).arg(bhsize) +
-                  QString("-Lang:%1").arg(lang);
+                  QString("-Lang:%1-%2").arg(lang).arg(idlanguage);
     emit setMessage(rec);
   } else {
     if (bhsize < 33) {
       QString rec =
-          _NONAMEFILE_ + QString(" / ") + QString("-Lang:%1").arg(lang);
+          _NONAMEFILE_ + QString(" / ") + QString("-Lang:%1-%2").arg(lang).arg(idlanguage);
       emit setMessage(rec);
     } else {
       QString rec = _NONAMEFILE_ + QString(" / Save your work..") +
-                    QString("-Lang:%1").arg(lang);
+                    QString("-Lang:%1-%2").arg(lang).arg(idlanguage);
       emit setMessage(rec);
     }
   }
@@ -676,12 +676,12 @@ void DOC::installfont(bool inout) {
       if (fontDatabase.addApplicationFont(fox) == -1) {
         qWarning() << "Failed to load " << fox;
       } else {
-        SESSDEBUG() << "Install success " << fox;
+        //// SESSDEBUG() << "Install success " << fox;
       }
     }
   } else {
     if (fontDatabase.removeAllApplicationFonts()) {
-      SESSDEBUG() << "Remove fonts success " << pushfont;
+      //// SESSDEBUG() << "Remove fonts success " << pushfont;
     } else {
       qWarning() << "Failed to remove font ";
     }

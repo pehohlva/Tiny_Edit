@@ -55,7 +55,7 @@ bool OasiMain::load(const QString &f) {
   currentin = QFileInfo(f);
   const QString html = DOC::self(this)->GetHtml(f);  //// no images
   QTextDocument *xdoc = DOC::self(this)->GetQdoc(f); //// images clone here
-  bool filldocobj = (xdoc->isEmpty()) ? false : true;
+  //// bool filldocobj = (xdoc->isEmpty()) ? false : true;
   if (html.isEmpty()) {
     base_edit->setDocument(xdoc);
     setCurrentFileName(f);
@@ -85,9 +85,9 @@ OasiMain::OasiMain(QWidget *parent) : QMainWindow(parent)  {
   setWindowIcon(QIcon(":/images/ODTicon.png"));
   setStyleSheet(xtyle);
   drawall();
-  connect(vrspeak, SIGNAL(setDumpMessage(QString)), this,
-          SLOT(TextOnlyTray(QString)));
   connect(combovoice, SIGNAL(activated(int)), this, SLOT(setVoiceat(int)));
+  connect(vrspeak, SIGNAL(switschStatus(bool)), this, SLOT(enableVoiceged(bool)));
+
 
   actionStopVoice->setDisabled(true);
   actionVoiceBlocks->setDisabled(false);
@@ -168,7 +168,7 @@ void OasiMain::showFront() {
 
 void OasiMain::drawall() {
   firstdocsize = 0;
-  QMenuBar *xtop = menuBar();
+  /// QMenuBar *xtop = menuBar();
   QToolBar *tb = new QToolBar();
   tb->setMaximumHeight(toolbarhight);
   tb->setWindowTitle(tr("File Actions"));
@@ -345,14 +345,13 @@ void OasiMain::setupTextActions() {
 #ifdef Q_OS_MAC
   menu->addSeparator();
   actionVoiceBlocks =
-      new QAction(QIcon(":/images/oo_icon.png"), tr("Voice Start Read."), this);
+      new QAction(QIcon(":/images/icvoice.png"), tr("Voice Start Read."), this);
   actionVoiceBlocks->setShortcut(Qt::CTRL + Qt::Key_M);
   connect(actionVoiceBlocks, SIGNAL(triggered()), this, SLOT(runReadBlocks()));
   tb->addAction(actionVoiceBlocks);
   menu->addAction(actionVoiceBlocks);
-
   actionStopVoice =
-      new QAction(QIcon(":/images/oo_icon.png"), tr("Stop Voice Read."), this);
+      new QAction(QIcon(":/images/novoice.png"), tr("Stop Voice Read."), this);
   connect(actionStopVoice, SIGNAL(triggered()), this, SLOT(stopReadBlocks()));
   tb->addAction(actionStopVoice);
   menu->addAction(actionStopVoice);
@@ -371,6 +370,9 @@ void OasiMain::setupTextActions() {
                        .arg(fox.voicename)
                        .arg(fox.countryname)
                        .arg(fox.language);
+
+    name.append(QString("-%1").arg(fox.languageID));
+
     combovoice->addItem(name, QVariant(fox.IDVoice));
     if (uservoice == fox.IDVoice) {
       combovoice->setCurrentIndex(combovoice->count() - 1);
@@ -473,11 +475,18 @@ bool OasiMain::maybeSave() {
     return false;
   return true;
 }
-
+//// connect(combovoice, SIGNAL(switschStatus(bool)), this, SLOT(enableVoiceged(bool)));
 void OasiMain::setVoiceat(int voiceid) {
+  combovoice->setEnabled(false);
   const int myvoice = combovoice->itemData(voiceid).toInt();
   DOC::self(this)->setValue("MyVoicePref", QVariant(myvoice));
   vrspeak->sayDemoVoice();
+}
+
+void OasiMain::enableVoiceged( bool e) {
+  if (e) {
+      combovoice->setEnabled(true);
+  }
 }
 
 void OasiMain::setCurrentFileName(const QString &fileName) {
@@ -785,11 +794,9 @@ void OasiMain::DocumentChanged() {
   DOC::self(this)->wakeUpContenent(txta, currentin);
 
   currdocsize = txta.size();
-  SESSDEBUG() << "### wake " << __FUNCTION__ << currdocsize << firstdocsize;
+  ///// SESSDEBUG() << "### wake " << __FUNCTION__ << currdocsize << firstdocsize;
   if (firstdocsize != currdocsize) {
     actionSave->setEnabled(true);
-    ////// debug traytop->showMessage(QString("Document Msg."), QString("Save
-    ///open..."), QSystemTrayIcon::Information, (5 * 1000));
   } else {
     actionSave->setEnabled(false);
   }
@@ -860,7 +867,9 @@ void OasiMain::runReadBlocks() {
   connect(vrspeak, SIGNAL(setVoicePriorMessage(QString)), this,SLOT(TextOnlyTray(QString)));
   if (!actionStopVoice->isEnabled()) {
     actionStopVoice->setDisabled(false);
+
   }
+  combovoice->setDisabled(true);
   actionVoiceBlocks->setDisabled(true);
   vrspeak->init_on(base_edit);
 }
@@ -871,10 +880,11 @@ void OasiMain::stopReadBlocks() {
   if (actionStopVoice->isEnabled()) {
     run = true;
   }
-  SESSDEBUG() << __FUNCTION__ << "### wake " << run;
+  ////// SESSDEBUG() << __FUNCTION__ << "### wake " << run;
   actionStopVoice->setDisabled(true);
   actionVoiceBlocks->setDisabled(false);
   if (run) {
     vrspeak->stopfast(); /// cursor text stop & voice
   }
+  combovoice->setDisabled(false);
 }

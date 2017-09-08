@@ -25,9 +25,6 @@
 #include "imageedit.h"
 #include "ui_forms.h"
 
-static const qreal TRACKPADSTEEPS = 0.013555555;
-static const qreal SLIDERMARGIN_TICK = 25.0;
-static const qreal SLIDERSPACER = 2.5;
 
 EditorKernel::EditorKernel() : QTextBrowser(), scaleFaktor(1.367) {
   edit_yes = true;
@@ -284,7 +281,8 @@ void EditorKernel::SetTableCellColor() {
     /* reformat this -> existingcell */
     QTextCharFormat existformat = existingcell.format();
     /* get color */
-    QColor col = QColorDialog::getRgba(NULL, &ok, this);
+    QColor opop(Qt::transparent);
+    QColor col = QColorDialog::getRgba(000000, &ok, this);
     if (!col.isValid()) {
       return;
     }
@@ -408,8 +406,7 @@ void EditorKernel::RemoveRowByCursorPosition() {
   Etable = findercursor.currentTable();
   if (Etable) {
     QTextTableCell existingcell = nowtable->cellAt(findercursor);
-    int cellcoolcursoris =
-        existingcell.column();                /* int value start from zero */
+    ///// int cellcoolcursoris = existingcell.column();                /* int value start from zero */
     int cellrowcursoris = existingcell.row(); /* int value start from zero */
     nowtable->removeRows(cellrowcursoris, 1);
   }
@@ -422,7 +419,7 @@ void EditorKernel::RemoveCoolByCursorPosition() {
     QTextTableCell existingcell = nowtable->cellAt(findercursor);
     int cellcoolcursoris =
         existingcell.column();                /* int value start from zero */
-    int cellrowcursoris = existingcell.row(); /* int value start from zero */
+    /// int cellrowcursoris = existingcell.row(); /* int value start from zero */
     nowtable->removeColumns(cellcoolcursoris, 1);
   }
 }
@@ -435,6 +432,7 @@ void EditorKernel::AppendTableRows() {
     QTextTableCell existingcell = nowtable->cellAt(findercursor);
     int cellcoolcursoris =
         existingcell.column();                /* int value start from zero */
+    Q_UNUSED(cellcoolcursoris);
     int cellrowcursoris = existingcell.row(); /* int value start from zero */
     int approwtot = QInputDialog::getInt(this, tr("Append  line row"),
                                          tr("Row:"), 1, 1, 100, 1, &ok);
@@ -453,6 +451,7 @@ void EditorKernel::AppendTableCools() {
     int cellcoolcursoris =
         existingcell.column();                /* int value start from zero */
     int cellrowcursoris = existingcell.row(); /* int value start from zero */
+    Q_UNUSED(cellrowcursoris);
     int appcooltot = QInputDialog::getInt(this, tr("Table Column nr."),
                                           tr("Cool:"), 1, 1, 10, 1, &ok);
     if (ok and appcooltot > 0) {
@@ -482,6 +481,7 @@ void EditorKernel::RepaintScreen() {
   this->setDocument(xdoc);
   this->document()->setHtml(html);
   this->document()->adjustSize();
+  this->setDocument(d);
   QTextCursor c(this->document());
   c.beginEditBlock();
   switchEditModus(); /// reset to last modus..
@@ -493,13 +493,14 @@ bool EditorKernel::event(QEvent *e) {
   } else if (e->type() == QEvent::ContextMenu) {
     contextMenuEvent(static_cast<QContextMenuEvent *>(e));
     e->accept();
-  } else {
-    return QTextBrowser::event(e);
   }
+  return QTextEdit::event(e);
 }
 
 void EditorKernel::removeFormat() {
-  const QString txt = this->document()->toPlainText();
+  QString txt = this->document()->toPlainText();
+  QChar doti('.');
+  txt.replace(doti,QLatin1String(". \n"));
   this->document()->clear();
   this->document()->setPlainText(txt);
 }

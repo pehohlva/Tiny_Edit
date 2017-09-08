@@ -129,6 +129,7 @@ public slots:
   //// voice read block by block
   void runReadBlocks();
   void stopReadBlocks();
+  void enableVoiceged( bool e); /// enable or disable combo voice
 
   void setVoiceat(int voiceid);
 

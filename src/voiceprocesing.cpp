@@ -1,6 +1,21 @@
 #include "voiceprocesing.h"
 
-
+/*  make numeric a QString summ from unicode used plus year code..
+ its faster to find in html code e pages.. */
+ int genkeyname(const QString name) {
+  int base = 0;
+  int xsize = name.size();
+  if (xsize > 55) {
+    xsize = 54;
+  }
+  for (int o = 0; o < xsize; o++) {
+    const QChar vox(name.at(o));
+    const int unico = (int)vox.unicode();
+    base += unico;
+  }
+  base += 2017;
+  return base;
+}
 
 VoiceProcesing::VoiceProcesing(QWidget *parent)
     : QDialog(parent)

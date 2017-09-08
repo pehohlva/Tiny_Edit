@@ -19,10 +19,40 @@
 #include <QApplication>
 #include <QtGui>
 #include <QFontDatabase>
-///// #include "allconfig.h"
 #include "oasimain.h"
 #include "oasi_application.h"
 #include "doc_session.h"
+
+#include <QtCore/QCoreApplication>
+#include <QTextStream>
+#include <QByteArray>
+#include <QString>
+#include <QProcess>
+#include <QElapsedTimer>
+
+#include "worker.h"
+
+
+
+
+/*
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+    QTextStream qout(stdout);
+    QStringList lc;
+    QStringList note;
+    lc << "-v";
+    lc << "Anna";
+    lc << "-f";
+    lc << "text.txt";
+    lc << "--progress";
+    ToWorker wt;
+    wt.run("say",lc);
+    return a.exec();
+}
+ */
+
 
 /////#include "allconfig.h"#include "mainwindow.h"*#include "core_application.h" #ifndef QT_NO_PRINTER QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
  ///// * Q_OS_MAC  Q_OS_WIN  Q_OS_LINUX  Q_OS_MAC*/
@@ -31,6 +61,3 @@ int main(int argc, char *argv[]) {
     Oasi a(argc, argv);
     return a.exec();
 }
-
-
-

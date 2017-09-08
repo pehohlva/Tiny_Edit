@@ -122,8 +122,7 @@ void Interface::SetPic(const QString pic) {
   origImageFilename = pic;
   QFileInfo ImageInfo(pic);
   fi = ImageInfo;
-  QString ext = ImageInfo.completeSuffix();
-  ext.toUpper();
+  QString ext = ImageInfo.completeSuffix().toUpper();
   extension = ext.toLocal8Bit();
   display = QPixmap(pic);
   original = QPixmap(pic);
@@ -398,6 +397,7 @@ void Interface::keyPressEvent(QKeyEvent *e) {
   }
 }
 void Interface::keyReleaseEvent(QKeyEvent *e) {
+  Q_UNUSED(e);
   setCursor(Qt::ArrowCursor);
   moverecci = false;
   CTRL_Pressed = false;
@@ -453,6 +453,7 @@ void Interface::Mousemove(QMouseEvent *e) /* mouse start */
 
 void Interface::mouseReleaseEvent(QMouseEvent *e) /* mouse start */
 {
+  Q_UNUSED(e);
   setCursor(Qt::ArrowCursor);
   moverecci = false;
   CTRL_Pressed = false;
@@ -561,7 +562,7 @@ void Interface::SetZoom(int percentual) {
   }
   ////////////qDebug() << "####### percentual  " << percentual;
   ratio = percentual;
-  QRect screenSize = qApp->desktop()->availableGeometry();
+  //// QRect screenSize = qApp->desktop()->availableGeometry();
   int newlarge = (original.width() / cento) * percentual;
   display = original2.scaledToWidth(newlarge, Qt::FastTransformation);
   wrapper->paint(display);
@@ -638,6 +639,7 @@ void Interface::applyFilter(QString filtername) {
   QImage base = income.convertToFormat(QImage::Format_RGB32);
   int newlarge = (original.width() / cento) * ratio;
   int largeful = base.width();
+  Q_UNUSED(largeful);
   QPixmap result;
   if (base.isNull()) {
     return;

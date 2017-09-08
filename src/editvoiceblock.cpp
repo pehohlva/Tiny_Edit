@@ -25,124 +25,79 @@
 #include <QProgressDialog>
 #include "core_htmldriver.h"
 #include "voiceprocesing.h"
-
-/*  make numeric a QString summ from unicode used plus year code..
- its faster to find in html code e pages.. */
-static inline int genkeyname(const QString name) {
-  int base = 0;
-  int xsize = name.size();
-  if (xsize > 55) {
-    xsize = 54;
-  }
-  for (int o = 0; o < xsize; o++) {
-    const QChar vox(name.at(o));
-    const int unico = (int)vox.unicode();
-    base += unico;
-  }
-  base += 2017;
-  return base;
-}
-
 #include <QObject>
 
 
 
-ToWorker::ToWorker(QObject *parent) : QObject(parent) { }
-
-void ToWorker::run(const QStringList cmd ) {
-    process = new QProcess();
-    QString tmp = QString("say %1").arg(cmd.join(" "));
-    SESSDEBUG() << __FUNCTION__ << " exec -  " << tmp;
-    process->setReadChannelMode(QProcess::MergedChannels);
-     connect(process, SIGNAL(finished(int)), this, SLOT(ready(int)));
-     process->start("say",cmd, QIODevice::ReadOnly);
-}
-
-void ToWorker::stop() {
-   process->kill();
-}
-
-void ToWorker::ready(int id ) {
-   SESSDEBUG() << __FUNCTION__ << " WORKER TELL MEE ready-  " << id;
-   emit targetVoiceReady(id);
-}
-
 static const int speedchaine = 1500;
 
 VoiceBlock::VoiceBlock(QObject *parent) : QObject(parent) {
-    now = pause;
-    voicejob = new ToWorker(this);
-    connect(voicejob, SIGNAL(targetVoiceReady(int)), this, SLOT(speechEnd(int)));
+    smisound = shutdown;
+    vcursor = notrun;
+    stateB =0;
 }
-
-
-
-
+/*  DocumentCursor vcursor; /// cursor read for sound. { notrun, waitrespone, parseblock, errorparse }
+  SoundStatus smisound; /// stautus of voice. { shutdown , waitsound, sendsound  } */
 void VoiceBlock::killVoice() {
-         now = pause;
-         stateB=0;
-         if (!voicejob) {
-            voicejob = new ToWorker(this);
-         } else {
-            voicejob->deleteLater();
-            voicejob = new ToWorker(this);
-         }
-         connect(voicejob, SIGNAL(targetVoiceReady(int)), this, SLOT(speechEnd(int)));
-         voicejob->stop();
-}
 
-void VoiceBlock::say(const QString text , Vstate e ) {
-    if (now == speeach && e !=internuse ) {
+    if (vcursor != notrun) {
+       stopfast();
+    }
+    smisound = shutdown;
+}
+/*  DocumentCursor vcursor; /// cursor read for sound. { notrun, waitrespone, parseblock, errorparse }
+  SoundStatus smisound; /// stautus of voice. { shutdown , waitsound, sendsound  } */
+void VoiceBlock::say(const QString text , int e ) {
+    if (text.size() == 0 ) {
+        SESSDEBUG() << __FUNCTION__ << " - NULLTEXT I INCOMMING GO ASSERT!";
         return;
     }
-  if (e == internuse && stateB ==0) {
-      stateB =1;
-  }
-  SESSDEBUG() << __FUNCTION__ << " - txt to read size->" << text.size();
-  now = speeach;
-  QString filetextnow = CACHESPEECHFILE;
-  if (stateB > 0) {
-     filetextnow =    CACHEBUFFERDISKTMP + QString("/readblock_%1.dat").arg(stateB);
-  }
-  unlink(filetextnow);
-  QFile f(filetextnow);
-  const int tc = text.size();
-  bool password = false;
-  if (f.open(QFile::Truncate | QFile::Text | QFile::ReadWrite)) {
-    QTextStream sw(&f);
-    sw.setCodec(QTextCodec::codecForName("UTF-8"));
-    sw << text;
-    f.close();
-    const qint64 bytetext = f.bytesAvailable();
-    if (bytetext > 0) {
-       SESSDEBUG() << __FUNCTION__ << " XXXXXXXXXX - txt to read size->" << bytetext;
-      password = true;
+
+    if (smisound !=shutdown) {
+        SESSDEBUG() << __FUNCTION__ << " - sound is not shutdown GO ASSERT!";
+        return;
     }
-  }
-  if ( password && currentVoice.IDVoice > 0 ) {
+
+
+   SESSDEBUG() << __FUNCTION__ << " - job go voice name " << currentVoice.voicename;
+   SESSDEBUG() << __FUNCTION__ << " - job go voice id" << currentVoice.IDVoice;
+   SESSDEBUG() << __FUNCTION__ << " - job txt" << text;
+  smisound = sendsound;
+  if (currentVoice.IDVoice > 0 ) {
     QStringList cmd;
-    cmd << QString("-f");
-    cmd << filetextnow;
-    cmd << QString("-v");
+    cmd << "-v";
     cmd << currentVoice.voicename;
-    ///// cmd << QString("--quality=125");
-    SESSDEBUG() << __FUNCTION__ << " - launch voice ->" << cmd << "-" << currentVoice.debug();
-    voicejob->run(cmd);
-  } else {
+    cmd << text;
+    smisound = waitsound;
+#ifdef Q_WS_MAC
+    singing = new VLoader(); //// vjob old obj
+    singing->setObjectName(QString("Singformac_voice_"));
+    singing->Setting(this,"say",cmd);
+    singing->start(QThread::LowPriority);
+#else
+    smisound = shutdown;
     stopfast();
-    SESSDEBUG() << __FUNCTION__ << " - STOP XXXXXXXX -" << currentVoice.debug();
+    vcursor = notrun;
+#endif
+  } else {
+    if ( vcursor ==  waitrespone && e !=0 ) {
+      stopfast();
+    } else {
+    //// SESSDEBUG() << __FUNCTION__ << " - STOP XXXXXXXX -" << currentVoice.debug();
     emit setVoicePriorMessage(QString("Unable to write inside Cache dir... disk is full?"));
+    }
   }
 }
 
+
 void VoiceBlock::sayDemoVoice() {
+  emit switschStatus(false);
   const int uservoice = DOC::self(this)->value("MyVoicePref").toInt();
   Voice person = TakeVoiceId(uservoice);
-  if (!person.voicename.isEmpty()) {
+  if (!person.voicename.isEmpty() || !person.demotext.isEmpty() ) {
     currentVoice = person;
     QString text = person.demotext.replace(QString("#"), QString());
-    say(text,outside);
-    SESSDEBUG() << __FUNCTION__ << " - " << person.debug();
+    say(text,0);
   } else {
     SESSDEBUG() << __FUNCTION__ << " - Assert null person!!!!!!XXXXXXXXXX";
   }
@@ -159,7 +114,7 @@ Voice VoiceBlock::TakeVoiceId(const int pref) {
     }
   }
   Voice nullio;
-  SESSDEBUG() << __FUNCTION__ << " grrrr not found id go assert!";
+  //// SESSDEBUG() << __FUNCTION__ << " grrrr not found id go assert!";
   return nullio;
 }
 
@@ -191,15 +146,14 @@ void VoiceBlock::FillvaiableVoice() {
       one.demotext = comment;
       if (!name.isEmpty()) {
         voices.append(one);
-        SESSDEBUG() << __FUNCTION__ << " refill " << one.debug();
+        ///// SESSDEBUG() << __FUNCTION__ << " refill " << one.debug();
       }
     }
   }
 }
 
 QString VoiceBlock::say_comand_sdout(QStringList comandlist) {
-  /////  QString tmp= QString("say %1").arg(comandlist.join(" "));
-  /////SESSDEBUG() << __FUNCTION__ << " exec -  " << tmp;
+ #ifdef Q_WS_MAC
   QString lstr;
   QString cmd = QString("say");
   QProcess *process = new QProcess(this);
@@ -209,12 +163,11 @@ QString VoiceBlock::say_comand_sdout(QStringList comandlist) {
     lstr = QString();
   } else {
     lstr = QString(process->readAll().constData());
-    if (lstr.isEmpty()) {
-      emit setDumpMessage(
-          QString("End Read from Voice %1").arg(currentVoice.voicename));
-    }
   }
   return lstr;
+#else
+     return QString();
+#endif
 }
 
 /*
@@ -225,6 +178,187 @@ bene la giornata?"
 
 
 */
+
+
+
+/*
+void VoiceBlock::say() {
+  if (now == speeach) {
+    SESSDEBUG() << __FUNCTION__ << " - on speeach- ";
+    QTimer::singleShot(speedchaine, this, SLOT(next()));
+  } else {
+    SESSDEBUG() << __FUNCTION__ << " - on pause or stop - ";
+  }
+}
+ */
+
+/*  DocumentCursor vcursor; /// cursor read for sound. { notrun, waitrespone, parseblock, errorparse }
+  SoundStatus smisound; /// stautus of voice. { shutdown , waitsound, sendsound  } */
+void VoiceBlock::stopfast() {
+  if (vcursor != notrun) {
+    vcursor = notrun;
+    smisound = shutdown;
+    summtotblock = edit->document()->blockCount();
+    for (int x = 0; x < summtotblock; x++) {
+      formatBlok(x, false); //// clean my format if have..
+    }
+     sendursorTo(0);
+     vcursor = notrun;
+     stateB = 0;
+     emit switschStatus(true);
+     emit endreadPage();
+     emit setVoicePriorMessage(QString("Stop/End Read Document.."));
+     if (singing) {
+         singing->terminate();
+         singing->deleteLater();
+     }
+  }
+
+  smisound = shutdown;
+  return;
+  ////  typedef QList<QObject*> QObjectList;
+  //// SESSDEBUG() << __FUNCTION__ << " - find item to kill ";
+  QObjectList mx = this->children();
+  QList<QObject*>::const_iterator x;
+  for (x = mx.constBegin(); x != mx.constEnd(); ++x) {
+    QObject *fox = *x;
+    //// SESSDEBUG() << fox->objectName() << " <->  find one or moore...";
+  }
+
+
+  ////
+}
+
+void VoiceBlock::reportTime( float qtime ) {
+     QString tmp = QString("hope");
+    ToWorker *voicework = qobject_cast<ToWorker *>(sender());
+    if (voicework) {
+        tmp = QString("suncastok...... ");
+    }
+    SESSDEBUG() << tmp << " Voice report state" << qtime;
+}
+
+/*  DocumentCursor vcursor; /// cursor read for sound. { notrun, waitrespone, parseblock, errorparse }
+  SoundStatus smisound; /// stautus of voice. { shutdown , waitsound, sendsound  } */
+void VoiceBlock::speechEnd() {
+#ifdef Q_WS_MAC
+    QString tmp;
+    ToWorker *voicework = qobject_cast<ToWorker *>(sender());
+    if (voicework) {
+        tmp = voicework->lastAction();
+        if (tmp.isEmpty()) {
+          return;
+        }
+        comanddebug.insert(tmp);
+    } else {
+        return;
+    }
+    SESSDEBUG() << __FUNCTION__ << "Voice ready-from   " << tmp  << ":state" << stateB;
+    smisound = shutdown;
+     if ( stateB > 1000 && vcursor == waitrespone ) {
+         vcursor = parseblock;
+         jump_and_Speeach(stateB);
+     } else {
+        emit switschStatus(true);
+     }
+
+#else
+//// use qspeech module normal
+emit switschStatus(true); /// button enable
+#endif
+}
+
+/*  DocumentCursor vcursor; /// cursor read for sound. { notrun, waitrespone, parseblock, errorparse }
+  SoundStatus smisound; /// stautus of voice. { shutdown , waitsound, sendsound  } */
+void VoiceBlock::jump_and_Speeach(int blocknr) {
+   SESSDEBUG() << __FUNCTION__ << " - pos -> " << blocknr;
+  if (vcursor != parseblock) {
+    return;
+  }
+  vcursor = parseblock;
+  const int textbloknummer = blocknr - 1000; //// work on null no..
+  QTextBlock dd = edit->document()->findBlockByNumber(textbloknummer);
+  stateB = blocknr;
+  stateB++;
+  QString tmp;
+  if (!dd.isValid()) {
+      vcursor = errorparse;
+      tmp = QString("error");
+  } else {
+     tmp = QString("valid");
+  }
+
+  SESSDEBUG() << "Block parse on:" << textbloknummer << " - StateB" << stateB << " blockValid:" << tmp;
+
+  if (!dd.isValid()) {
+      stopfast(); //// end document..
+      return;
+  }
+
+
+  if (dd.isValid()) {
+    const QString txt = dd.text();
+    QString dummytext = txt.trimmed();
+            if (dummytext.size() > 0) {
+              formatBlok(textbloknummer, true);
+            } else {
+              formatBlok(textbloknummer, false);
+            }
+    formatBlok(textbloknummer - 1, false);
+    //// send cursor next block...to view text ok...
+    sendursorTo(textbloknummer + 2);
+            if (dummytext.isEmpty()) {
+              SESSDEBUG() << __FUNCTION__ << ": go next";
+              vcursor = parseblock;
+              jump_and_Speeach(stateB);
+              return;
+            } else {
+              SESSDEBUG() << __FUNCTION__ << ": go say";
+              vcursor = waitrespone;
+              say(txt,stateB);
+              return;
+            }
+  }
+}
+
+/*  DocumentCursor vcursor; /// cursor read for sound. { notrun, waitrespone, parseblock, errorparse }
+  SoundStatus smisound; /// stautus of voice. { shutdown , waitsound, sendsound  } */
+void VoiceBlock::init_on(QTextEdit *e) {
+  if (vcursor != notrun) {
+    return;
+  }
+  const int uservoice = DOC::self(this)->value("MyVoicePref").toInt();
+  Voice person = TakeVoiceId(uservoice);
+  if (!person.voicename.isEmpty() || !person.demotext.isEmpty() ) {
+    currentVoice = person;
+  }
+  vcursor = parseblock;
+  edit = e;
+  QString fillt = e->document()->toPlainText();
+  if (fillt.size() < 10) {
+    emit endreadPage();
+    emit setVoicePriorMessage(QString("No Text found to Speeck or no Documents, maybe too small."));
+    vcursor = notrun;
+    return;
+  }
+  if (currentVoice.voicename.isEmpty()) {
+      vcursor = notrun;
+      emit endreadPage();
+      emit setVoicePriorMessage(QString("Error Voice Name not exist, we need a Name from list."));
+      return;
+  }
+  //// enum DocumentCursor { notrun, waitrespone, parseblock, errorparse };
+  stateB = 1000; /// to init on block 0;
+
+  const int gg = DOC::self(this)->value(QString("DoumentCurrentLanguage")).toInt();
+  if (currentVoice.languageID != gg) {
+     emit setVoicePriorMessage(QString("Voice Name %1 have other language as document.").arg(currentVoice.voicename));
+  }
+  emit switschStatus(false);
+  summtotblock = edit->document()->blockCount();
+  vcursor = parseblock;
+  jump_and_Speeach(stateB); /// to init on block 0;
+}
 
 void VoiceBlock::formatBlok(const int blokid, bool highlight) {
 
@@ -256,121 +390,4 @@ void VoiceBlock::sendursorTo(const int blocknr) {
     c.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
     edit->setTextCursor(c);
   }
-}
-
-/*
-void VoiceBlock::say() {
-  if (now == speeach) {
-    SESSDEBUG() << __FUNCTION__ << " - on speeach- ";
-    QTimer::singleShot(speedchaine, this, SLOT(next()));
-  } else {
-    SESSDEBUG() << __FUNCTION__ << " - on pause or stop - ";
-  }
-}
- */
-void VoiceBlock::stopfast() {
-  if (now != stop) {
-    now = stop;
-    summtotblock = edit->document()->blockCount();
-    for (int x = 0; x < summtotblock; x++) {
-      formatBlok(x, false); //// clean my format if have..
-    }
-     sendursorTo(0);
-     killVoice(); /// voice stop
-     emit setVoicePriorMessage(QString("Stop Read Document.."));
-  }
-}
-
-void VoiceBlock::next() {
-  if (now == stop) {
-    return;
-  }
-  summtotblock = edit->document()->blockCount();
-  if (stateB !=1) {
-  stateB++;
-  }
-  SESSDEBUG() << __FUNCTION__ << " - pos -> " << stateB;
-  SESSDEBUG() << stateB << " - call next - " << now;
-  if (stateB < summtotblock) {
-    jump_and_Speeach(stateB);
-  } else {
-    formatBlok(stateB, false);
-    formatBlok(stateB - 1, false);
-    now = stop;
-    sendursorTo(0);
-    emit endreadPage();
-    emit setDumpMessage(QString("End Read Document.."));
-  }
-}
-
-void VoiceBlock::speechEnd( int sig ) {
-    SESSDEBUG() << __FUNCTION__ << " ready-  " << sig << ":state" << stateB;
-    now = pause;
-     ///// if read paragraph continue line
-     if ( stateB != 0) {
-         now = speeach;
-         next();
-     }
-}
-
-void VoiceBlock::jump_and_Speeach(int blocknr) {
-   SESSDEBUG() << __FUNCTION__ << " - pos -> " << blocknr;
-  /*
-  if (speechDoc->state() == QTextToSpeech::Speaking) {
-      speechDoc->stop();
-  }
-  */
-  if (now != speeach) {
-    return;
-  }
-  QTextBlock dd = edit->document()->findBlockByNumber(blocknr);
-  SESSDEBUG() << __FUNCTION__ << ":" << __LINE__ <<  " " << blocknr << dd.isValid();
-
-  if (dd.isValid()) {
-    const QString txt = dd.text();
-    QString pobs = txt.trimmed();
-            if (pobs.size() > 0) {
-              formatBlok(blocknr, true);
-              ////SESSDEBUG() << blocknr << " - pos - " << txt;
-            } else {
-              formatBlok(blocknr, false);
-            }
-    formatBlok(blocknr - 1, false);
-    //// send cursor next block...to view text ok...
-    QTextCursor bcu(dd);
-    sendursorTo(blocknr + 1);
-            if (txt.isEmpty()) {
-              SESSDEBUG() << __FUNCTION__ << ":" << __LINE__ <<  " " << blocknr << " go next";
-              next();
-              return;
-            } else {
-              SESSDEBUG() << __FUNCTION__ << ":" << __LINE__ << now <<  txt.size() << " " << blocknr << " go say";
-              say(txt,internuse);
-              return;
-            }
-  }
-  SESSDEBUG() << __FUNCTION__ << " - call - novalid block" << blocknr;
-}
-
-void VoiceBlock::init_on(QTextEdit *e) {
-  if (now == speeach) {
-    return; /// call stop to destroy...
-  }
-  edit = e;
-  QString fillt = e->document()->toPlainText();
-  if (fillt.size() < 10) {
-    now = stop;
-    emit endreadPage();
-    emit setDumpMessage(QString("No Text found to Speeck or no Documents."));
-    return;
-  }
-  int beginbb = 12;
-  stateB = 0;
-  const int gg =
-      DOC::self(this)->value(QString("DoumentCurrentLanguage")).toInt();
-  summtotblock = edit->document()->blockCount();
-  const QString engine = QString("default");
-  QTextCursor ecu = edit->textCursor();
-  now = speeach;
-  jump_and_Speeach(0);
 }

@@ -25,6 +25,9 @@
 #include <QProcess>
 #include <QObject>
 #include <QDialog>
+#include "worker.h"
+
+int genkeyname(const QString name);
 
 class VoiceProcesing : public QDialog
 {

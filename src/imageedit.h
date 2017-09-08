@@ -56,6 +56,7 @@ public:
     repaint();
   }
   void paintEvent(QPaintEvent *e) {
+      Q_UNUSED(e);
     QPainter painter;
     QBrush nowis(QColor(Qt::transparent), Qt::SolidPattern);
     painter.setBrush(nowis);
