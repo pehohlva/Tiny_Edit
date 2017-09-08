@@ -56,15 +56,7 @@ Oasi::Oasi(int &argc, char **argv) : QApplication(argc, argv) {
           SLOT(appsOpen(QString))); //// mac
   connect(mainwin, SIGNAL(request_to_close()), this, SLOT(prepare_to_close()));
 
-  QRect rall = QApplication::desktop()->availableGeometry();
-  const qreal _wi = rall.width();
-  const qreal _hi = rall.height();
-  const qreal mawi_ = _wi - 300;
-  const qreal mahi_ = _hi - 300;
-  mainwin->setMinimumWidth(mawi_);
-  mainwin->setMinimumHeight(mahi_);
-  const qreal TopLeftisnow = (_wi / 2) - (mawi_ / 2);
-  mainwin->move(QPoint(TopLeftisnow, 0));
+
   //// for linux & Window mac go fileevent
   QStringList filelist = this->arguments();
   for (int x = 0; x < filelist.size(); x++) {

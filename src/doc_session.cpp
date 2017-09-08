@@ -606,16 +606,14 @@ void DOC::image_grep(QString &html, QString &newhtml) {
 
 void DOC::incommingText(QString txt) {
   if (!txt.isEmpty()) {
-    //// emit setPriorMessage(txt);
+    emit setPriorMessage(txt);
   }
-  qDebug() << "###  message odt " << txt << " |";
 }
 void DOC::observerDoc() {
   QDateTime Tloac = QDateTime::currentDateTime().toLocalTime();
   QString xday = Tloac.toString(Qt::SystemLocaleLongDate);
-  ///// mainw->SetStatusText(QString("Load: %1").arg(xday));
   QTimer::singleShot(1000, this, SLOT(observerDoc()));
-  emit setMessageBase(QString("Dc. %1").arg(xday));
+  emit setMessageBase(QString("Local: %1").arg(xday));
 }
 
 void DOC::setValue(const QString name, QVariant data) {

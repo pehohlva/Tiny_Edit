@@ -39,8 +39,8 @@ message( " Load local poppler static lib /POPPLERPDFQT4 load static" )
 qtHaveModule(core) {
 #############module xxdebug?###############release!##########################################
 TEMPLATE = app
-TARGET = ../OasisEdit
-CONFIG +=release warn_off silence
+TARGET = OasisEdit
+CONFIG +=release_debug warn_on silence
 RC_FILE = images/ODTicon.icns
 QMAKE_INFO_PLIST = Info.plist
 } else {
@@ -81,6 +81,8 @@ SOURCES += main.cpp \
 RESOURCES += textedit.qrc
 
 DISTFILES += copy_session
+
+
 
 
 

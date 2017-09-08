@@ -132,6 +132,7 @@ public slots:
   void enableVoiceged( bool e); /// enable or disable combo voice
 
   void setVoiceat(int voiceid);
+  void convertTextMp3();
 
 protected:
   QSystemTrayIcon *traytop;
@@ -142,7 +143,7 @@ protected:
   QAction *actionSave, *actionTextBold, *actionTextUnderline, *actionTextItalic,
       *actionTextColor, *actionAlignLeft, *actionAlignCenter, *actionAlignRight,
       *actionAlignJustify, *actionUndo, *actionRedo, *actionCut, *actionCopy,
-      *actionPaste, *actionVoiceBlocks, *actionStopVoice;
+      *actionPaste, *actionVoiceBlocks, *actionStopVoice, *actionDocTextmp3;
 
   QStatusBar *statusbar;
   QFontComboBox *comboFont;
@@ -157,7 +158,6 @@ protected:
   bool enableedit;
   int currdocsize;
   int firstdocsize;
-  VoiceBlock *vrspeak;
 };
 
 #endif // OASIMAIN_H

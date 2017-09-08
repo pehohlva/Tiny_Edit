@@ -499,8 +499,6 @@ bool EditorKernel::event(QEvent *e) {
 
 void EditorKernel::removeFormat() {
   QString txt = this->document()->toPlainText();
-  QChar doti('.');
-  txt.replace(doti,QLatin1String(". \n"));
   this->document()->clear();
   this->document()->setPlainText(txt);
 }
