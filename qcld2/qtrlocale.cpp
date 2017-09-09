@@ -75,7 +75,7 @@ bool file_put_contents(const QString fullFileName, QString &xml , int modus) {
     }
     }
         QTextCodec *codecx;
-        codecx = QTextCodec::codecForMib(106);
+        codecx = QTextCodec::codecForName("UTF-8");
         QFile f( fullFileName );
             if (modus == 0) {  //// not append!
                 if (f.exists()) {

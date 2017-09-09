@@ -32,17 +32,22 @@ class VoiceProcesing : public QDialog {
 public:
   static VoiceProcesing *self(QWidget * = 0);
   ~VoiceProcesing();
+  void setTextProcess( const QString txt ); /// bevor init
 
   enum Action_Cycle { start, chance, stop, idle };
 
 signals:
   void setValuePros(int);
 
+
 public slots:
   void updateProgress();
+  void speechEnd();
   void startAction();
   void closeallcyle();
   void setVoiceatd(int voiceid);
+  void setFormatdAudioOut( int index );
+  void reportTime(float tms );
 
 private:
   VoiceProcesing(QWidget * = 0);
@@ -51,9 +56,10 @@ private:
   QGridLayout *gridLayout;
   QLabel *label_2;
   QComboBox *voicenames;
+  QComboBox *voiceformat;
   QProgressBar *progressBar;
   QLabel *label;
-  QLineEdit *lineEdit;
+  //// QLineEdit *lineEdit;
   QPushButton *startaction;
   QPushButton *abortation;
   QLabel *label_3;
@@ -61,6 +67,11 @@ private:
   int cursorp;
   Action_Cycle cnow; ///
   QElapsedTimer timer;
+  QString proessingtxt;
+  QString filetargetout;
+  QString formatcmd;
+  QString formatextenion;
+  Voice Voicecurrent;
 };
 
 #endif // VOICEPROCESING_H

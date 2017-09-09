@@ -79,6 +79,9 @@
 #include <QTextToSpeech>
 #endif
 
+#define INITFILEPLAY QString("%1/loadme.htm").arg(QDir::homePath())
+
+
 class VoiceBlock;
 class EditorKernel;
 

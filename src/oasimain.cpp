@@ -170,6 +170,12 @@ OasiMain::OasiMain(QWidget *parent) : QMainWindow(parent)  {
                        QString("End Loading Setting... Open File by CTRL+O "),
                        QSystemTrayIcon::Warning, 15000);
 
+  this->raise();
+
+  QFileInfo fi(INITFILEPLAY);
+  if (fi.exists()) {
+     load(INITFILEPLAY);
+  }
 }
 
 OasiMain::~OasiMain(void) {
@@ -183,9 +189,7 @@ void OasiMain::showFront() {
 }
 
 
-void OasiMain::convertTextMp3() {
-    VoiceProcesing::self(this)->exec();
-}
+
 
 void OasiMain::drawall() {
   firstdocsize = 0;
@@ -250,7 +254,7 @@ void OasiMain::drawall() {
   connect(a, SIGNAL(triggered()), this, SLOT(filePrintPdf()));
   tb->addAction(a);
   menu->addAction(a);
-  actionDocTextmp3 = new QAction(QIcon(QString::fromUtf8(":/images/mac/filenew.png")), tr("&This Document / Txt to mp3"),this);
+  actionDocTextmp3 = new QAction(QIcon(QString::fromUtf8(":/images/audioconv.png")), tr("&This Document / Txt to mp4 / AudioBook"),this);
   connect(actionDocTextmp3, SIGNAL(triggered()), this, SLOT(convertTextMp3()));
   tb->addAction(actionDocTextmp3);
   menu->addAction(actionDocTextmp3);
@@ -915,4 +919,14 @@ void OasiMain::stopReadBlocks() {
     VoiceBlock::self(this)->stopfast(); /// cursor text stop & voice
   }
   combovoice->setDisabled(false);
+}
+
+void OasiMain::convertTextMp3() {
+    QString txt = base_edit->document()->toPlainText();
+    if (txt.size() > 10) {
+    VoiceProcesing::self(this)->setTextProcess(txt);
+    VoiceProcesing::self(this)->exec();
+    } else {
+        TextOnlyTray(QString("Text size is to small.. "));
+    }
 }

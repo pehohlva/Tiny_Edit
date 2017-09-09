@@ -40,7 +40,7 @@ qtHaveModule(core) {
 #############module xxdebug?###############release!##########################################
 TEMPLATE = app
 TARGET = OasisEdit
-CONFIG +=release_debug warn_on silence
+CONFIG +=release warn_off silence
 RC_FILE = images/ODTicon.icns
 QMAKE_INFO_PLIST = Info.plist
 } else {
