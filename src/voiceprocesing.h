@@ -1,9 +1,34 @@
+/*
+    Copyright (C)  2017 Piter K. <pehohlva@gmail.com>
+
+    This library is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 2.1 of the License, or
+    (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #ifndef VOICEPROCESING_H
 #define VOICEPROCESING_H
 
+#include "editvoiceblock.h"
+#include "worker.h"
 #include <QDialog>
+#include <QObject>
+#include <QPointer>
+#include <QProcess>
+#include <QProgressBar>
 #include <QPushButton>
+#include <QSettings>
+#include <QTextDocument>
 #include <QTextEdit>
+#include <QWidget>
 #include <QtCore/QVariant>
 #include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
@@ -13,16 +38,6 @@
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QProgressBar>
-#include "editvoiceblock.h"
-#include "worker.h"
-#include <QDialog>
-#include <QObject>
-#include <QPointer>
-#include <QProcess>
-#include <QProgressBar>
-#include <QSettings>
-#include <QTextDocument>
-#include <QWidget>
 
 int genkeyname(const QString name);
 
@@ -32,13 +47,12 @@ class VoiceProcesing : public QDialog {
 public:
   static VoiceProcesing *self(QWidget * = 0);
   ~VoiceProcesing();
-  void setTextProcess( const QString txt ); /// bevor init
+  void setTextProcess(const QString txt); /// bevor init
 
   enum Action_Cycle { start, chance, stop, idle };
 
 signals:
   void setValuePros(int);
-
 
 public slots:
   void updateProgress();
@@ -46,8 +60,8 @@ public slots:
   void startAction();
   void closeallcyle();
   void setVoiceatd(int voiceid);
-  void setFormatdAudioOut( int index );
-  void reportTime(float tms );
+  void setFormatdAudioOut(int index);
+  void reportTime(float tms);
 
 private:
   VoiceProcesing(QWidget * = 0);

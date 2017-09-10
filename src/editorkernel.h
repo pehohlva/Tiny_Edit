@@ -14,6 +14,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 #ifndef EDITORKERNEL_H
 #define EDITORKERNEL_H
 
@@ -38,12 +39,10 @@ public slots:
   void RepaintScreen();
   void Image_mod_Setting();
   void PrintScreen();
-
   void MakePrintScreen();
   void CreateanewTable();
   void insertImage(const QString filenew);
   void insertHtml(QString html);
-
   void MergeCellByCursorPosition();
   void RemoveRowByCursorPosition();
   void RemoveCoolByCursorPosition();
@@ -52,10 +51,8 @@ public slots:
   void TableSetting();
   void SetTableCellColor();
   void SetColumLarge();
-
   void switchEditModus();
   void modus_edit(bool e);
-
   void CreateanewImage();
   void removeFormat();
 

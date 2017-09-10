@@ -25,15 +25,18 @@
 #include "imageedit.h"
 #include "ui_forms.h"
 
-
 EditorKernel::EditorKernel() : QTextBrowser(), scaleFaktor(1.367) {
   edit_yes = true;
   active_or_not = 10;
-  modus_edit(edit_yes);
-  this->setContentsMargins(0, 0, 0, 0);
+  //// modus_edit(edit_yes);
+  setOpenExternalLinks(false);
+  setOpenLinks(false);
+  setOverwriteMode(false);
+  setReadOnly(false);
+  setContentsMargins(0, 0, 0, 0);
   screenprint = new QShortcut(QKeySequence(tr("Ctrl+W", "Print Screen")), this);
   connect(screenprint, SIGNAL(activated()), this, SLOT(MakePrintScreen()));
-  this->setFont(QFont(_WORKDEFAULTFONT_));
+  setFont(QFont(_WORKDEFAULTFONT_));
 }
 
 void EditorKernel::switchEditModus() {
@@ -47,19 +50,18 @@ void EditorKernel::switchEditModus() {
 }
 
 void EditorKernel::modus_edit(bool e) {
+    /*
   if (e) {
     //// edit...
     setOpenExternalLinks(false);
     setOpenLinks(false);
-    setOverwriteMode(true);
     setReadOnly(false);
   } else {
     /// view
     setOpenExternalLinks(true);
     setOpenLinks(true);
-    setOverwriteMode(false);
     setReadOnly(true);
-  }
+  } */
 }
 
 void EditorKernel::insertImage(const QString filenew) {
@@ -77,13 +79,6 @@ void EditorKernel::insertImage(const QString filenew) {
     this->document()->addResource(QTextDocument::ImageResource,
                                   QUrl(randomname), xpic);
 
-    QFile fips(TMPIMAGE);
-    if (fips.exists()) {
-      ///// fips.remove();
-    }
-
-  } else {
-    qDebug() << "### pic xpic.isNull()-> " << xpic.isNull();
   }
 }
 
@@ -97,22 +92,16 @@ void EditorKernel::Image_mod_Setting() {
     return;
   }
   QDateTime timer1(QDateTime::currentDateTime());
-  ///// const qint64 sec1970 = timer1.currentMSecsSinceEpoch();
   QVariant img = this->document()->resource(QTextDocument::ImageResource,
                                             picname); //// get image
   QImage imgxx = img.value<QImage>();
-  qDebug() << "### picnamepicnamepicnamepicnamepicnamepicname origin  "
-           << imgxx.width();
   imgxx.save(TMPIMAGE, "PNG", 9);
   if (nowimage.isValid()) {
     Interface::self(this)->SetFormat(nowimage);
     Interface::self(this)->SetPic(TMPIMAGE);
     Interface::self(this)->exec();
-
     QImage imgswap;
     imgswap.load(TMPIMAGE, "PNG");
-    qDebug() << "### picnamepicnamepicnamepicnamepicnamepicname swap  "
-             << imgswap.width();
     QTextImageFormat newforminepic = Interface::self(this)->GetFormat();
     if (newforminepic.isValid()) {
       if (!imgswap.isNull()) {
@@ -129,11 +118,7 @@ void EditorKernel::Image_mod_Setting() {
         this->document()->addResource(QTextDocument::ImageResource,
                                       QUrl(randomname), imgswap);
 
-      } else {
-        qDebug() << "###  image is null ";
       }
-      /////// insertImage(TMPIMAGE); //// become new name..
-      ///// QTimer::singleShot(200, this, SLOT(RepaintScreen()));
     }
   }
 }
@@ -159,8 +144,7 @@ void EditorKernel::contextMenuEvent(QContextMenuEvent *event) {
   Eimage = nowimage.isValid();
   Etable = lastcursor.currentTable();
   isqtextblok = textblocc.isValid();
-  //// QAction *addAction(const QIcon &icon, const QString &text, const QObject
-  ///*receiver, const char* member, const QKeySequence &shortcut = 0);
+
 
   if (nowimage.isValid()) {
     QString picname = nowimage.name();
@@ -206,7 +190,6 @@ void EditorKernel::contextMenuEvent(QContextMenuEvent *event) {
                             SLOT(SetTableCellColor()));
     tableContext->addAction(tr("Set Cell Width"), this, SLOT(SetColumLarge()));
   }
-  qDebug() << "### xxxx  " << event->globalPos();
   menu->popup(event->globalPos());
 }
 
@@ -246,11 +229,8 @@ void EditorKernel::SetColumLarge() {
   Etable = findercursor.currentTable();
   if (Etable) {
     QTextTableCell existingcell = nowtable->cellAt(findercursor);
-
     QTextTableFormat tbforms = nowtable->format();
-
-    int cellcoolcursoris =
-        existingcell.column(); /* int value start from zero */
+    int cellcoolcursoris = existingcell.column(); /* int value start from zero */
     /* get lengh % to set on cell .... */
     bool ok;
     int LargeSet =
@@ -406,7 +386,8 @@ void EditorKernel::RemoveRowByCursorPosition() {
   Etable = findercursor.currentTable();
   if (Etable) {
     QTextTableCell existingcell = nowtable->cellAt(findercursor);
-    ///// int cellcoolcursoris = existingcell.column();                /* int value start from zero */
+    ///// int cellcoolcursoris = existingcell.column();                /* int
+    /// value start from zero */
     int cellrowcursoris = existingcell.row(); /* int value start from zero */
     nowtable->removeRows(cellrowcursoris, 1);
   }
@@ -418,8 +399,9 @@ void EditorKernel::RemoveCoolByCursorPosition() {
   if (Etable) {
     QTextTableCell existingcell = nowtable->cellAt(findercursor);
     int cellcoolcursoris =
-        existingcell.column();                /* int value start from zero */
-    /// int cellrowcursoris = existingcell.row(); /* int value start from zero */
+        existingcell.column(); /* int value start from zero */
+    /// int cellrowcursoris = existingcell.row(); /* int value start from zero
+    /// */
     nowtable->removeColumns(cellcoolcursoris, 1);
   }
 }
@@ -431,7 +413,7 @@ void EditorKernel::AppendTableRows() {
   if (Etable) {
     QTextTableCell existingcell = nowtable->cellAt(findercursor);
     int cellcoolcursoris =
-        existingcell.column();                /* int value start from zero */
+        existingcell.column(); /* int value start from zero */
     Q_UNUSED(cellcoolcursoris);
     int cellrowcursoris = existingcell.row(); /* int value start from zero */
     int approwtot = QInputDialog::getInt(this, tr("Append  line row"),
@@ -510,7 +492,7 @@ void EditorKernel::wheelEvent(QWheelEvent *event) {
     else
       zoomOut();
   } else
-    QTextBrowser::wheelEvent(event);
+    QTextEdit::wheelEvent(event);
 }
 
 bool EditorKernel::gestureNative(QNativeGestureEvent *e) {
@@ -522,7 +504,6 @@ bool EditorKernel::gestureNative(QNativeGestureEvent *e) {
       zoomOut();
     }
   }
-  SESSDEBUG() << "events-" << e->value();
   e->accept();
   return true;
 }

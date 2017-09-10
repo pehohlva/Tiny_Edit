@@ -648,8 +648,7 @@ void DOC::log_documents(QString xtcr) {
 void DOC::save() {
   //////  DownDir_RM(CACHEBUFFERDISKTMP);
   QDir trash(CACHEBUFFERDISKTMP);
-  SESSDEBUG() << "###  trash.exists() " << trash.exists() << " by by wake "
-              << __FUNCTION__;
+  SESSDEBUG() << "###  trash.exists() " << trash.exists() << " by by wake " << __FUNCTION__;
 }
 void DOC::setDir(const QString workdir) { workdirectory = workdir; }
 void DOC::installfont(bool inout) {
