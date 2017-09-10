@@ -269,7 +269,7 @@ void VoiceProcesing::startAction() {
   VLoader *singing = new VLoader(); //// vjob old obj
   singing->setObjectName(QString("Singformac_voice_2"));
   singing->Setting(this, "say", cmd);
-  singing->start(QThread::LowPriority);
+  singing->start(QThread::NormalPriority);
 }
 
 void VoiceProcesing::speechEnd() {

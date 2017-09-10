@@ -36,8 +36,8 @@ void ToWorker::blabering(const QString cmd, const QStringList args) {
   process->setArguments(args);
   QObject::connect(process, SIGNAL(finished(int)), this, SLOT(ready(int)));
   process->open(QIODevice::ReadOnly);
-  const int maxtimeset = (120 * 1000);
-  if (!process->waitForFinished(maxtimeset)) {
+  //// const int maxtimeset = (60 * 60  * 1000); no time out
+  if (!process->waitForFinished(-1)) {
     result = process->readAll();
     result.prepend("-");
     cursor = ending;
